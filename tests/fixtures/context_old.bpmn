@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             id="Definitions_Context"
+             targetNamespace="http://example.com/bpmn">
+  <process id="PROC" name="Konteks" isExecutable="false">
+    <laneSet>
+      <lane id="L" name="Lane">
+        <flowNodeRef>A</flowNodeRef>
+        <flowNodeRef>B</flowNodeRef>
+        <flowNodeRef>C</flowNodeRef>
+      </lane>
+    </laneSet>
+    <startEvent id="A" name="Awal"/>
+    <task id="B" name="Tengah"/>
+    <endEvent id="C" name="Akhir"/>
+    <sequenceFlow id="F1" sourceRef="A" targetRef="B"/>
+    <sequenceFlow id="F2" sourceRef="B" targetRef="C"/>
+  </process>
+</definitions>

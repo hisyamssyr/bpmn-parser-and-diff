@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_INV_L2" targetNamespace="https://simple-erp.local/bpmn">
+  <bpmn:process id="INV-L2-001" name="Inventory Adjustment Level 2" isExecutable="false">
+    <bpmn:laneSet id="LANESET-INV-001">
+      <bpmn:lane id="LANE-INV-OPERATOR" name="Operator"><bpmn:flowNodeRef>INV-START</bpmn:flowNodeRef><bpmn:flowNodeRef>INV-ADJ-001</bpmn:flowNodeRef><bpmn:flowNodeRef>INV-ADJ-002</bpmn:flowNodeRef></bpmn:lane>
+      <bpmn:lane id="LANE-INV-ADMIN" name="Admin"><bpmn:flowNodeRef>INV-ADJ-003</bpmn:flowNodeRef><bpmn:flowNodeRef>GW-INV-APPROVED</bpmn:flowNodeRef><bpmn:flowNodeRef>INV-END-REJECTED</bpmn:flowNodeRef></bpmn:lane>
+      <bpmn:lane id="LANE-INV-SYSTEM" name="System"><bpmn:flowNodeRef>GW-INV-DIFFERENCE</bpmn:flowNodeRef><bpmn:flowNodeRef>INV-ADJ-004</bpmn:flowNodeRef><bpmn:flowNodeRef>GW-INV-COMPLETE-MERGE</bpmn:flowNodeRef><bpmn:flowNodeRef>INV-ADJ-005</bpmn:flowNodeRef><bpmn:flowNodeRef>INV-END-COMPLETED</bpmn:flowNodeRef></bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="INV-START" name="Stock discrepancy identified"><bpmn:outgoing>FLOW-INV-001</bpmn:outgoing></bpmn:startEvent>
+    <bpmn:userTask id="INV-ADJ-001" name="Create inventory adjustment"><bpmn:incoming>FLOW-INV-001</bpmn:incoming><bpmn:outgoing>FLOW-INV-002</bpmn:outgoing></bpmn:userTask>
+    <bpmn:userTask id="INV-ADJ-002" name="Submit inventory adjustment"><bpmn:incoming>FLOW-INV-002</bpmn:incoming><bpmn:outgoing>FLOW-INV-003</bpmn:outgoing></bpmn:userTask>
+    <bpmn:userTask id="INV-ADJ-003" name="Review inventory adjustment"><bpmn:incoming>FLOW-INV-003</bpmn:incoming><bpmn:outgoing>FLOW-INV-004</bpmn:outgoing></bpmn:userTask>
+    <bpmn:exclusiveGateway id="GW-INV-APPROVED" name="Adjustment approved?" default="FLOW-INV-006"><bpmn:incoming>FLOW-INV-004</bpmn:incoming><bpmn:outgoing>FLOW-INV-005</bpmn:outgoing><bpmn:outgoing>FLOW-INV-006</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:endEvent id="INV-END-REJECTED" name="Adjustment rejected"><bpmn:incoming>FLOW-INV-006</bpmn:incoming></bpmn:endEvent>
+    <bpmn:exclusiveGateway id="GW-INV-DIFFERENCE" name="Quantity difference?" default="FLOW-INV-008"><bpmn:incoming>FLOW-INV-005</bpmn:incoming><bpmn:outgoing>FLOW-INV-007</bpmn:outgoing><bpmn:outgoing>FLOW-INV-008</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="INV-ADJ-004" name="Post adjustment movement"><bpmn:incoming>FLOW-INV-007</bpmn:incoming><bpmn:outgoing>FLOW-INV-009</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="GW-INV-COMPLETE-MERGE" name="Finalize adjustment"><bpmn:incoming>FLOW-INV-008</bpmn:incoming><bpmn:incoming>FLOW-INV-009</bpmn:incoming><bpmn:outgoing>FLOW-INV-009A</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="INV-ADJ-005" name="Complete inventory adjustment"><bpmn:incoming>FLOW-INV-009A</bpmn:incoming><bpmn:outgoing>FLOW-INV-010</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:endEvent id="INV-END-COMPLETED" name="Adjustment completed"><bpmn:incoming>FLOW-INV-010</bpmn:incoming></bpmn:endEvent>
+    <bpmn:sequenceFlow id="FLOW-INV-001" sourceRef="INV-START" targetRef="INV-ADJ-001" />
+    <bpmn:sequenceFlow id="FLOW-INV-002" sourceRef="INV-ADJ-001" targetRef="INV-ADJ-002" />
+    <bpmn:sequenceFlow id="FLOW-INV-003" sourceRef="INV-ADJ-002" targetRef="INV-ADJ-003" />
+    <bpmn:sequenceFlow id="FLOW-INV-004" sourceRef="INV-ADJ-003" targetRef="GW-INV-APPROVED" />
+    <bpmn:sequenceFlow id="FLOW-INV-005" name="Approved" sourceRef="GW-INV-APPROVED" targetRef="GW-INV-DIFFERENCE"><bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">decision = 'APPROVED'</bpmn:conditionExpression></bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="FLOW-INV-006" name="Rejected" sourceRef="GW-INV-APPROVED" targetRef="INV-END-REJECTED" />
+    <bpmn:sequenceFlow id="FLOW-INV-007" name="Non-zero" sourceRef="GW-INV-DIFFERENCE" targetRef="INV-ADJ-004"><bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">differenceQuantity != 0</bpmn:conditionExpression></bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="FLOW-INV-008" name="Zero" sourceRef="GW-INV-DIFFERENCE" targetRef="GW-INV-COMPLETE-MERGE" />
+    <bpmn:sequenceFlow id="FLOW-INV-009" sourceRef="INV-ADJ-004" targetRef="GW-INV-COMPLETE-MERGE" />
+    <bpmn:sequenceFlow id="FLOW-INV-009A" sourceRef="GW-INV-COMPLETE-MERGE" targetRef="INV-ADJ-005" />
+    <bpmn:sequenceFlow id="FLOW-INV-010" sourceRef="INV-ADJ-005" targetRef="INV-END-COMPLETED" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagram_INV_L2">
+    <bpmndi:BPMNPlane id="Plane_INV_L2" bpmnElement="INV-L2-001">
+      <bpmndi:BPMNShape id="LANE-INV-OPERATOR_di" bpmnElement="LANE-INV-OPERATOR" isHorizontal="true"><dc:Bounds x="40" y="40" width="1500" height="160" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="LANE-INV-ADMIN_di" bpmnElement="LANE-INV-ADMIN" isHorizontal="true"><dc:Bounds x="40" y="200" width="1500" height="160" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="LANE-INV-SYSTEM_di" bpmnElement="LANE-INV-SYSTEM" isHorizontal="true"><dc:Bounds x="40" y="360" width="1500" height="160" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="INV-START_di" bpmnElement="INV-START"><dc:Bounds x="100" y="102" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="INV-ADJ-001_di" bpmnElement="INV-ADJ-001"><dc:Bounds x="190" y="80" width="120" height="80" /><bpmndi:BPMNLabel /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="INV-ADJ-002_di" bpmnElement="INV-ADJ-002"><dc:Bounds x="360" y="80" width="120" height="80" /><bpmndi:BPMNLabel /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="INV-ADJ-003_di" bpmnElement="INV-ADJ-003"><dc:Bounds x="530" y="240" width="120" height="80" /><bpmndi:BPMNLabel /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GW-INV-APPROVED_di" bpmnElement="GW-INV-APPROVED" isMarkerVisible="true"><dc:Bounds x="700" y="255" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="INV-END-REJECTED_di" bpmnElement="INV-END-REJECTED"><dc:Bounds x="810" y="312" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GW-INV-DIFFERENCE_di" bpmnElement="GW-INV-DIFFERENCE" isMarkerVisible="true"><dc:Bounds x="820" y="415" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="INV-ADJ-004_di" bpmnElement="INV-ADJ-004"><dc:Bounds x="940" y="400" width="120" height="80" /><bpmndi:BPMNLabel /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GW-INV-COMPLETE-MERGE_di" bpmnElement="GW-INV-COMPLETE-MERGE" isMarkerVisible="true"><dc:Bounds x="1080" y="415" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="INV-ADJ-005_di" bpmnElement="INV-ADJ-005"><dc:Bounds x="1180" y="400" width="120" height="80" /><bpmndi:BPMNLabel /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="INV-END-COMPLETED_di" bpmnElement="INV-END-COMPLETED"><dc:Bounds x="1370" y="422" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="FLOW-INV-001_di" bpmnElement="FLOW-INV-001"><di:waypoint x="136" y="120" /><di:waypoint x="190" y="120" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-INV-002_di" bpmnElement="FLOW-INV-002"><di:waypoint x="310" y="120" /><di:waypoint x="360" y="120" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-INV-003_di" bpmnElement="FLOW-INV-003"><di:waypoint x="480" y="120" /><di:waypoint x="505" y="120" /><di:waypoint x="505" y="280" /><di:waypoint x="530" y="280" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-INV-004_di" bpmnElement="FLOW-INV-004"><di:waypoint x="650" y="280" /><di:waypoint x="700" y="280" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-INV-005_di" bpmnElement="FLOW-INV-005"><di:waypoint x="725" y="305" /><di:waypoint x="725" y="440" /><di:waypoint x="820" y="440" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-INV-006_di" bpmnElement="FLOW-INV-006"><di:waypoint x="750" y="280" /><di:waypoint x="780" y="280" /><di:waypoint x="780" y="330" /><di:waypoint x="810" y="330" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-INV-007_di" bpmnElement="FLOW-INV-007"><di:waypoint x="870" y="440" /><di:waypoint x="940" y="440" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-INV-008_di" bpmnElement="FLOW-INV-008"><di:waypoint x="845" y="465" /><di:waypoint x="845" y="500" /><di:waypoint x="1105" y="500" /><di:waypoint x="1105" y="465" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-INV-009_di" bpmnElement="FLOW-INV-009"><di:waypoint x="1060" y="440" /><di:waypoint x="1080" y="440" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-INV-009A_di" bpmnElement="FLOW-INV-009A"><di:waypoint x="1130" y="440" /><di:waypoint x="1180" y="440" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-INV-010_di" bpmnElement="FLOW-INV-010"><di:waypoint x="1300" y="440" /><di:waypoint x="1370" y="440" /></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

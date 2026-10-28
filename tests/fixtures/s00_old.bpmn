@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_L1" targetNamespace="https://simple-erp.local/bpmn">
+  <bpmn:collaboration id="COLLAB-L1-001">
+    <bpmn:participant id="PART-L1-P2P" name="Procure-to-Pay" processRef="P2P-L1-001" />
+    <bpmn:participant id="PART-L1-O2C" name="Order-to-Cash" processRef="O2C-L1-001" />
+    <bpmn:participant id="PART-L1-INV" name="Inventory Adjustment" processRef="INV-L1-001" />
+    <bpmn:participant id="PART-L1-AUTH" name="Access Lifecycle" processRef="AUTH-L1-001" />
+  </bpmn:collaboration>
+  <bpmn:process id="P2P-L1-001" name="Procure-to-Pay Level 1" isExecutable="false">
+    <bpmn:startEvent id="P2P-L1-START"><bpmn:outgoing>FLOW-P2P-L1-001</bpmn:outgoing></bpmn:startEvent>
+    <bpmn:subProcess id="P2P-L1-REQ" name="Request and approve purchase"><bpmn:incoming>FLOW-P2P-L1-001</bpmn:incoming><bpmn:outgoing>FLOW-P2P-L1-002</bpmn:outgoing></bpmn:subProcess>
+    <bpmn:subProcess id="P2P-L1-ORDER" name="Order goods"><bpmn:incoming>FLOW-P2P-L1-002</bpmn:incoming><bpmn:outgoing>FLOW-P2P-L1-003</bpmn:outgoing></bpmn:subProcess>
+    <bpmn:subProcess id="P2P-L1-RECEIVE" name="Receive and post stock"><bpmn:incoming>FLOW-P2P-L1-003</bpmn:incoming><bpmn:outgoing>FLOW-P2P-L1-004</bpmn:outgoing></bpmn:subProcess>
+    <bpmn:subProcess id="P2P-L1-PAY" name="Match invoice and pay"><bpmn:incoming>FLOW-P2P-L1-004</bpmn:incoming><bpmn:outgoing>FLOW-P2P-L1-005</bpmn:outgoing></bpmn:subProcess>
+    <bpmn:endEvent id="P2P-L1-END"><bpmn:incoming>FLOW-P2P-L1-005</bpmn:incoming></bpmn:endEvent>
+    <bpmn:sequenceFlow id="FLOW-P2P-L1-001" sourceRef="P2P-L1-START" targetRef="P2P-L1-REQ" />
+    <bpmn:sequenceFlow id="FLOW-P2P-L1-002" sourceRef="P2P-L1-REQ" targetRef="P2P-L1-ORDER" />
+    <bpmn:sequenceFlow id="FLOW-P2P-L1-003" sourceRef="P2P-L1-ORDER" targetRef="P2P-L1-RECEIVE" />
+    <bpmn:sequenceFlow id="FLOW-P2P-L1-004" sourceRef="P2P-L1-RECEIVE" targetRef="P2P-L1-PAY" />
+    <bpmn:sequenceFlow id="FLOW-P2P-L1-005" sourceRef="P2P-L1-PAY" targetRef="P2P-L1-END" />
+  </bpmn:process>
+  <bpmn:process id="O2C-L1-001" name="Order-to-Cash Level 1" isExecutable="false">
+    <bpmn:startEvent id="O2C-L1-START"><bpmn:outgoing>FLOW-O2C-L1-001</bpmn:outgoing></bpmn:startEvent>
+    <bpmn:subProcess id="O2C-L1-ORDER" name="Capture and approve order"><bpmn:incoming>FLOW-O2C-L1-001</bpmn:incoming><bpmn:outgoing>FLOW-O2C-L1-002</bpmn:outgoing></bpmn:subProcess>
+    <bpmn:subProcess id="O2C-L1-DELIVER" name="Deliver and post stock"><bpmn:incoming>FLOW-O2C-L1-002</bpmn:incoming><bpmn:outgoing>FLOW-O2C-L1-003</bpmn:outgoing></bpmn:subProcess>
+    <bpmn:subProcess id="O2C-L1-INVOICE" name="Invoice customer"><bpmn:incoming>FLOW-O2C-L1-003</bpmn:incoming><bpmn:outgoing>FLOW-O2C-L1-004</bpmn:outgoing></bpmn:subProcess>
+    <bpmn:subProcess id="O2C-L1-CASH" name="Receive payment"><bpmn:incoming>FLOW-O2C-L1-004</bpmn:incoming><bpmn:outgoing>FLOW-O2C-L1-005</bpmn:outgoing></bpmn:subProcess>
+    <bpmn:endEvent id="O2C-L1-END"><bpmn:incoming>FLOW-O2C-L1-005</bpmn:incoming></bpmn:endEvent>
+    <bpmn:sequenceFlow id="FLOW-O2C-L1-001" sourceRef="O2C-L1-START" targetRef="O2C-L1-ORDER" />
+    <bpmn:sequenceFlow id="FLOW-O2C-L1-002" sourceRef="O2C-L1-ORDER" targetRef="O2C-L1-DELIVER" />
+    <bpmn:sequenceFlow id="FLOW-O2C-L1-003" sourceRef="O2C-L1-DELIVER" targetRef="O2C-L1-INVOICE" />
+    <bpmn:sequenceFlow id="FLOW-O2C-L1-004" sourceRef="O2C-L1-INVOICE" targetRef="O2C-L1-CASH" />
+    <bpmn:sequenceFlow id="FLOW-O2C-L1-005" sourceRef="O2C-L1-CASH" targetRef="O2C-L1-END" />
+  </bpmn:process>
+  <bpmn:process id="INV-L1-001" name="Inventory Adjustment Level 1" isExecutable="false">
+    <bpmn:startEvent id="INV-L1-START"><bpmn:outgoing>FLOW-INV-L1-001</bpmn:outgoing></bpmn:startEvent>
+    <bpmn:subProcess id="INV-L1-COUNT" name="Count and propose adjustment"><bpmn:incoming>FLOW-INV-L1-001</bpmn:incoming><bpmn:outgoing>FLOW-INV-L1-002</bpmn:outgoing></bpmn:subProcess>
+    <bpmn:subProcess id="INV-L1-APPROVE" name="Review adjustment"><bpmn:incoming>FLOW-INV-L1-002</bpmn:incoming><bpmn:outgoing>FLOW-INV-L1-003</bpmn:outgoing></bpmn:subProcess>
+    <bpmn:subProcess id="INV-L1-POST" name="Post stock movement"><bpmn:incoming>FLOW-INV-L1-003</bpmn:incoming><bpmn:outgoing>FLOW-INV-L1-004</bpmn:outgoing></bpmn:subProcess>
+    <bpmn:endEvent id="INV-L1-END"><bpmn:incoming>FLOW-INV-L1-004</bpmn:incoming></bpmn:endEvent>
+    <bpmn:sequenceFlow id="FLOW-INV-L1-001" sourceRef="INV-L1-START" targetRef="INV-L1-COUNT" />
+    <bpmn:sequenceFlow id="FLOW-INV-L1-002" sourceRef="INV-L1-COUNT" targetRef="INV-L1-APPROVE" />
+    <bpmn:sequenceFlow id="FLOW-INV-L1-003" sourceRef="INV-L1-APPROVE" targetRef="INV-L1-POST" />
+    <bpmn:sequenceFlow id="FLOW-INV-L1-004" sourceRef="INV-L1-POST" targetRef="INV-L1-END" />
+  </bpmn:process>
+  <bpmn:process id="AUTH-L1-001" name="Access Lifecycle Level 1" isExecutable="false">
+    <bpmn:startEvent id="AUTH-L1-START"><bpmn:outgoing>FLOW-AUTH-L1-001</bpmn:outgoing></bpmn:startEvent>
+    <bpmn:exclusiveGateway id="GW-AUTH-L1-TYPE" name="Access request type" default="FLOW-AUTH-L1-003"><bpmn:incoming>FLOW-AUTH-L1-001</bpmn:incoming><bpmn:outgoing>FLOW-AUTH-L1-002</bpmn:outgoing><bpmn:outgoing>FLOW-AUTH-L1-003</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:subProcess id="AUTH-L1-INVITE" name="Invite and activate user"><bpmn:incoming>FLOW-AUTH-L1-002</bpmn:incoming><bpmn:outgoing>FLOW-AUTH-L1-004</bpmn:outgoing></bpmn:subProcess>
+    <bpmn:subProcess id="AUTH-L1-RESET" name="Reset password"><bpmn:incoming>FLOW-AUTH-L1-003</bpmn:incoming><bpmn:outgoing>FLOW-AUTH-L1-005</bpmn:outgoing></bpmn:subProcess>
+    <bpmn:exclusiveGateway id="GW-AUTH-L1-MERGE" name="Access ready"><bpmn:incoming>FLOW-AUTH-L1-004</bpmn:incoming><bpmn:incoming>FLOW-AUTH-L1-005</bpmn:incoming><bpmn:outgoing>FLOW-AUTH-L1-006</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:endEvent id="AUTH-L1-END"><bpmn:incoming>FLOW-AUTH-L1-006</bpmn:incoming></bpmn:endEvent>
+    <bpmn:sequenceFlow id="FLOW-AUTH-L1-001" sourceRef="AUTH-L1-START" targetRef="GW-AUTH-L1-TYPE" />
+    <bpmn:sequenceFlow id="FLOW-AUTH-L1-002" name="Invitation" sourceRef="GW-AUTH-L1-TYPE" targetRef="AUTH-L1-INVITE"><bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">requestType = 'INVITATION'</bpmn:conditionExpression></bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="FLOW-AUTH-L1-003" name="Password reset" sourceRef="GW-AUTH-L1-TYPE" targetRef="AUTH-L1-RESET" />
+    <bpmn:sequenceFlow id="FLOW-AUTH-L1-004" sourceRef="AUTH-L1-INVITE" targetRef="GW-AUTH-L1-MERGE" />
+    <bpmn:sequenceFlow id="FLOW-AUTH-L1-005" sourceRef="AUTH-L1-RESET" targetRef="GW-AUTH-L1-MERGE" />
+    <bpmn:sequenceFlow id="FLOW-AUTH-L1-006" sourceRef="GW-AUTH-L1-MERGE" targetRef="AUTH-L1-END" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagram_L1">
+    <bpmndi:BPMNPlane id="Plane_L1" bpmnElement="COLLAB-L1-001">
+      <bpmndi:BPMNShape id="PART-L1-P2P_di" bpmnElement="PART-L1-P2P" isHorizontal="true"><dc:Bounds x="40" y="40" width="900" height="160" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P2P-L1-START_di" bpmnElement="P2P-L1-START"><dc:Bounds x="100" y="102" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P2P-L1-REQ_di" bpmnElement="P2P-L1-REQ" isExpanded="false"><dc:Bounds x="190" y="80" width="130" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P2P-L1-ORDER_di" bpmnElement="P2P-L1-ORDER" isExpanded="false"><dc:Bounds x="360" y="80" width="130" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P2P-L1-RECEIVE_di" bpmnElement="P2P-L1-RECEIVE" isExpanded="false"><dc:Bounds x="530" y="80" width="130" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P2P-L1-PAY_di" bpmnElement="P2P-L1-PAY" isExpanded="false"><dc:Bounds x="700" y="80" width="130" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P2P-L1-END_di" bpmnElement="P2P-L1-END"><dc:Bounds x="870" y="102" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PART-L1-O2C_di" bpmnElement="PART-L1-O2C" isHorizontal="true"><dc:Bounds x="40" y="230" width="900" height="160" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="O2C-L1-START_di" bpmnElement="O2C-L1-START"><dc:Bounds x="100" y="292" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="O2C-L1-ORDER_di" bpmnElement="O2C-L1-ORDER" isExpanded="false"><dc:Bounds x="190" y="270" width="130" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="O2C-L1-DELIVER_di" bpmnElement="O2C-L1-DELIVER" isExpanded="false"><dc:Bounds x="360" y="270" width="130" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="O2C-L1-INVOICE_di" bpmnElement="O2C-L1-INVOICE" isExpanded="false"><dc:Bounds x="530" y="270" width="130" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="O2C-L1-CASH_di" bpmnElement="O2C-L1-CASH" isExpanded="false"><dc:Bounds x="700" y="270" width="130" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="O2C-L1-END_di" bpmnElement="O2C-L1-END"><dc:Bounds x="870" y="292" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PART-L1-INV_di" bpmnElement="PART-L1-INV" isHorizontal="true"><dc:Bounds x="40" y="420" width="900" height="160" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="INV-L1-START_di" bpmnElement="INV-L1-START"><dc:Bounds x="100" y="482" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="INV-L1-COUNT_di" bpmnElement="INV-L1-COUNT" isExpanded="false"><dc:Bounds x="230" y="460" width="150" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="INV-L1-APPROVE_di" bpmnElement="INV-L1-APPROVE" isExpanded="false"><dc:Bounds x="450" y="460" width="150" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="INV-L1-POST_di" bpmnElement="INV-L1-POST" isExpanded="false"><dc:Bounds x="670" y="460" width="150" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="INV-L1-END_di" bpmnElement="INV-L1-END"><dc:Bounds x="870" y="482" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PART-L1-AUTH_di" bpmnElement="PART-L1-AUTH" isHorizontal="true"><dc:Bounds x="40" y="610" width="900" height="260" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AUTH-L1-START_di" bpmnElement="AUTH-L1-START"><dc:Bounds x="100" y="712" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GW-AUTH-L1-TYPE_di" bpmnElement="GW-AUTH-L1-TYPE" isMarkerVisible="true"><dc:Bounds x="170" y="705" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AUTH-L1-INVITE_di" bpmnElement="AUTH-L1-INVITE" isExpanded="false"><dc:Bounds x="300" y="630" width="150" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AUTH-L1-RESET_di" bpmnElement="AUTH-L1-RESET" isExpanded="false"><dc:Bounds x="300" y="750" width="150" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GW-AUTH-L1-MERGE_di" bpmnElement="GW-AUTH-L1-MERGE" isMarkerVisible="true"><dc:Bounds x="550" y="705" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AUTH-L1-END_di" bpmnElement="AUTH-L1-END"><dc:Bounds x="660" y="712" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="FLOW-P2P-L1-001_di" bpmnElement="FLOW-P2P-L1-001"><di:waypoint x="136" y="120" /><di:waypoint x="190" y="120" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-P2P-L1-002_di" bpmnElement="FLOW-P2P-L1-002"><di:waypoint x="320" y="120" /><di:waypoint x="360" y="120" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-P2P-L1-003_di" bpmnElement="FLOW-P2P-L1-003"><di:waypoint x="490" y="120" /><di:waypoint x="530" y="120" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-P2P-L1-004_di" bpmnElement="FLOW-P2P-L1-004"><di:waypoint x="660" y="120" /><di:waypoint x="700" y="120" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-P2P-L1-005_di" bpmnElement="FLOW-P2P-L1-005"><di:waypoint x="830" y="120" /><di:waypoint x="870" y="120" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-O2C-L1-001_di" bpmnElement="FLOW-O2C-L1-001"><di:waypoint x="136" y="310" /><di:waypoint x="190" y="310" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-O2C-L1-002_di" bpmnElement="FLOW-O2C-L1-002"><di:waypoint x="320" y="310" /><di:waypoint x="360" y="310" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-O2C-L1-003_di" bpmnElement="FLOW-O2C-L1-003"><di:waypoint x="490" y="310" /><di:waypoint x="530" y="310" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-O2C-L1-004_di" bpmnElement="FLOW-O2C-L1-004"><di:waypoint x="660" y="310" /><di:waypoint x="700" y="310" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-O2C-L1-005_di" bpmnElement="FLOW-O2C-L1-005"><di:waypoint x="830" y="310" /><di:waypoint x="870" y="310" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-INV-L1-001_di" bpmnElement="FLOW-INV-L1-001"><di:waypoint x="136" y="500" /><di:waypoint x="230" y="500" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-INV-L1-002_di" bpmnElement="FLOW-INV-L1-002"><di:waypoint x="380" y="500" /><di:waypoint x="450" y="500" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-INV-L1-003_di" bpmnElement="FLOW-INV-L1-003"><di:waypoint x="600" y="500" /><di:waypoint x="670" y="500" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-INV-L1-004_di" bpmnElement="FLOW-INV-L1-004"><di:waypoint x="820" y="500" /><di:waypoint x="870" y="500" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-AUTH-L1-001_di" bpmnElement="FLOW-AUTH-L1-001"><di:waypoint x="136" y="730" /><di:waypoint x="170" y="730" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-AUTH-L1-002_di" bpmnElement="FLOW-AUTH-L1-002"><di:waypoint x="195" y="705" /><di:waypoint x="195" y="670" /><di:waypoint x="300" y="670" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-AUTH-L1-003_di" bpmnElement="FLOW-AUTH-L1-003"><di:waypoint x="195" y="755" /><di:waypoint x="195" y="790" /><di:waypoint x="300" y="790" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-AUTH-L1-004_di" bpmnElement="FLOW-AUTH-L1-004"><di:waypoint x="450" y="670" /><di:waypoint x="575" y="670" /><di:waypoint x="575" y="705" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-AUTH-L1-005_di" bpmnElement="FLOW-AUTH-L1-005"><di:waypoint x="450" y="790" /><di:waypoint x="575" y="790" /><di:waypoint x="575" y="755" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-AUTH-L1-006_di" bpmnElement="FLOW-AUTH-L1-006"><di:waypoint x="600" y="730" /><di:waypoint x="660" y="730" /></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

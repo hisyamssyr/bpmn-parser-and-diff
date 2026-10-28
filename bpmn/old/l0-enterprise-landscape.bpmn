@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_L0" targetNamespace="https://simple-erp.local/bpmn">
+  <bpmn:process id="ERP-L0-001" name="Mini ERP Process Landscape" isExecutable="false">
+    <bpmn:startEvent id="ERP-L0-START" name="Business need identified">
+      <bpmn:outgoing>FLOW-L0-001</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:exclusiveGateway id="ERP-L0-GW-001" name="Which capability is needed?" default="FLOW-L0-009">
+      <bpmn:incoming>FLOW-L0-001</bpmn:incoming>
+      <bpmn:outgoing>FLOW-L0-002</bpmn:outgoing>
+      <bpmn:outgoing>FLOW-L0-003</bpmn:outgoing>
+      <bpmn:outgoing>FLOW-L0-004</bpmn:outgoing>
+      <bpmn:outgoing>FLOW-L0-005</bpmn:outgoing>
+      <bpmn:outgoing>FLOW-L0-006</bpmn:outgoing>
+      <bpmn:outgoing>FLOW-L0-007</bpmn:outgoing>
+      <bpmn:outgoing>FLOW-L0-008</bpmn:outgoing>
+      <bpmn:outgoing>FLOW-L0-009</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:callActivity id="CAP-AUTH-001" name="Manage access and users" calledElement="AUTH-L1-001">
+      <bpmn:incoming>FLOW-L0-002</bpmn:incoming>
+      <bpmn:outgoing>FLOW-L0-010</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:subProcess id="CAP-MDM-001" name="Manage master data">
+      <bpmn:incoming>FLOW-L0-003</bpmn:incoming>
+      <bpmn:outgoing>FLOW-L0-011</bpmn:outgoing>
+    </bpmn:subProcess>
+    <bpmn:callActivity id="CAP-P2P-001" name="Run Procure-to-Pay" calledElement="P2P-L1-001">
+      <bpmn:incoming>FLOW-L0-004</bpmn:incoming>
+      <bpmn:outgoing>FLOW-L0-012</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:callActivity id="CAP-O2C-001" name="Run Order-to-Cash" calledElement="O2C-L1-001">
+      <bpmn:incoming>FLOW-L0-005</bpmn:incoming>
+      <bpmn:outgoing>FLOW-L0-013</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:callActivity id="CAP-INV-001" name="Adjust inventory" calledElement="INV-L1-001">
+      <bpmn:incoming>FLOW-L0-006</bpmn:incoming>
+      <bpmn:outgoing>FLOW-L0-014</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:subProcess id="CAP-FIN-001" name="Manage simple finance">
+      <bpmn:incoming>FLOW-L0-007</bpmn:incoming>
+      <bpmn:outgoing>FLOW-L0-015</bpmn:outgoing>
+    </bpmn:subProcess>
+    <bpmn:subProcess id="CAP-RPT-001" name="Review dashboard and reports">
+      <bpmn:incoming>FLOW-L0-008</bpmn:incoming>
+      <bpmn:outgoing>FLOW-L0-016</bpmn:outgoing>
+    </bpmn:subProcess>
+    <bpmn:subProcess id="CAP-AUD-001" name="Review audit trail">
+      <bpmn:incoming>FLOW-L0-009</bpmn:incoming>
+      <bpmn:outgoing>FLOW-L0-017</bpmn:outgoing>
+    </bpmn:subProcess>
+    <bpmn:exclusiveGateway id="ERP-L0-GW-002" name="Capability completed">
+      <bpmn:incoming>FLOW-L0-010</bpmn:incoming>
+      <bpmn:incoming>FLOW-L0-011</bpmn:incoming>
+      <bpmn:incoming>FLOW-L0-012</bpmn:incoming>
+      <bpmn:incoming>FLOW-L0-013</bpmn:incoming>
+      <bpmn:incoming>FLOW-L0-014</bpmn:incoming>
+      <bpmn:incoming>FLOW-L0-015</bpmn:incoming>
+      <bpmn:incoming>FLOW-L0-016</bpmn:incoming>
+      <bpmn:incoming>FLOW-L0-017</bpmn:incoming>
+      <bpmn:outgoing>FLOW-L0-018</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="ERP-L0-END" name="Business need completed">
+      <bpmn:incoming>FLOW-L0-018</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="FLOW-L0-001" sourceRef="ERP-L0-START" targetRef="ERP-L0-GW-001" />
+    <bpmn:sequenceFlow id="FLOW-L0-002" name="Access or user" sourceRef="ERP-L0-GW-001" targetRef="CAP-AUTH-001"><bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">capability = 'AUTH'</bpmn:conditionExpression></bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="FLOW-L0-003" name="Master data" sourceRef="ERP-L0-GW-001" targetRef="CAP-MDM-001"><bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">capability = 'MDM'</bpmn:conditionExpression></bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="FLOW-L0-004" name="Procurement" sourceRef="ERP-L0-GW-001" targetRef="CAP-P2P-001"><bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">capability = 'P2P'</bpmn:conditionExpression></bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="FLOW-L0-005" name="Sales" sourceRef="ERP-L0-GW-001" targetRef="CAP-O2C-001"><bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">capability = 'O2C'</bpmn:conditionExpression></bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="FLOW-L0-006" name="Inventory" sourceRef="ERP-L0-GW-001" targetRef="CAP-INV-001"><bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">capability = 'INV'</bpmn:conditionExpression></bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="FLOW-L0-007" name="Finance" sourceRef="ERP-L0-GW-001" targetRef="CAP-FIN-001"><bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">capability = 'FIN'</bpmn:conditionExpression></bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="FLOW-L0-008" name="Reporting" sourceRef="ERP-L0-GW-001" targetRef="CAP-RPT-001"><bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">capability = 'RPT'</bpmn:conditionExpression></bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="FLOW-L0-009" name="Audit" sourceRef="ERP-L0-GW-001" targetRef="CAP-AUD-001" />
+    <bpmn:sequenceFlow id="FLOW-L0-010" sourceRef="CAP-AUTH-001" targetRef="ERP-L0-GW-002" />
+    <bpmn:sequenceFlow id="FLOW-L0-011" sourceRef="CAP-MDM-001" targetRef="ERP-L0-GW-002" />
+    <bpmn:sequenceFlow id="FLOW-L0-012" sourceRef="CAP-P2P-001" targetRef="ERP-L0-GW-002" />
+    <bpmn:sequenceFlow id="FLOW-L0-013" sourceRef="CAP-O2C-001" targetRef="ERP-L0-GW-002" />
+    <bpmn:sequenceFlow id="FLOW-L0-014" sourceRef="CAP-INV-001" targetRef="ERP-L0-GW-002" />
+    <bpmn:sequenceFlow id="FLOW-L0-015" sourceRef="CAP-FIN-001" targetRef="ERP-L0-GW-002" />
+    <bpmn:sequenceFlow id="FLOW-L0-016" sourceRef="CAP-RPT-001" targetRef="ERP-L0-GW-002" />
+    <bpmn:sequenceFlow id="FLOW-L0-017" sourceRef="CAP-AUD-001" targetRef="ERP-L0-GW-002" />
+    <bpmn:sequenceFlow id="FLOW-L0-018" sourceRef="ERP-L0-GW-002" targetRef="ERP-L0-END" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagram_L0">
+    <bpmndi:BPMNPlane id="Plane_L0" bpmnElement="ERP-L0-001">
+      <bpmndi:BPMNShape id="ERP-L0-START_di" bpmnElement="ERP-L0-START"><dc:Bounds x="80" y="282" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ERP-L0-GW-001_di" bpmnElement="ERP-L0-GW-001" isMarkerVisible="true"><dc:Bounds x="170" y="275" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="CAP-AUTH-001_di" bpmnElement="CAP-AUTH-001"><dc:Bounds x="300" y="20" width="130" height="60" /><bpmndi:BPMNLabel /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="CAP-MDM-001_di" bpmnElement="CAP-MDM-001" isExpanded="false"><dc:Bounds x="300" y="90" width="130" height="60" /><bpmndi:BPMNLabel /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="CAP-P2P-001_di" bpmnElement="CAP-P2P-001"><dc:Bounds x="300" y="160" width="130" height="60" /><bpmndi:BPMNLabel /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="CAP-O2C-001_di" bpmnElement="CAP-O2C-001"><dc:Bounds x="300" y="230" width="130" height="60" /><bpmndi:BPMNLabel /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="CAP-INV-001_di" bpmnElement="CAP-INV-001"><dc:Bounds x="300" y="300" width="130" height="60" /><bpmndi:BPMNLabel /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="CAP-FIN-001_di" bpmnElement="CAP-FIN-001" isExpanded="false"><dc:Bounds x="300" y="370" width="130" height="60" /><bpmndi:BPMNLabel /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="CAP-RPT-001_di" bpmnElement="CAP-RPT-001" isExpanded="false"><dc:Bounds x="300" y="440" width="130" height="60" /><bpmndi:BPMNLabel /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="CAP-AUD-001_di" bpmnElement="CAP-AUD-001" isExpanded="false"><dc:Bounds x="300" y="510" width="130" height="60" /><bpmndi:BPMNLabel /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ERP-L0-GW-002_di" bpmnElement="ERP-L0-GW-002" isMarkerVisible="true"><dc:Bounds x="510" y="275" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ERP-L0-END_di" bpmnElement="ERP-L0-END"><dc:Bounds x="640" y="282" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="FLOW-L0-001_di" bpmnElement="FLOW-L0-001"><di:waypoint x="116" y="300" /><di:waypoint x="170" y="300" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-L0-002_di" bpmnElement="FLOW-L0-002"><di:waypoint x="195" y="275" /><di:waypoint x="195" y="50" /><di:waypoint x="300" y="50" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-L0-003_di" bpmnElement="FLOW-L0-003"><di:waypoint x="195" y="275" /><di:waypoint x="195" y="120" /><di:waypoint x="300" y="120" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-L0-004_di" bpmnElement="FLOW-L0-004"><di:waypoint x="220" y="300" /><di:waypoint x="250" y="300" /><di:waypoint x="250" y="190" /><di:waypoint x="300" y="190" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-L0-005_di" bpmnElement="FLOW-L0-005"><di:waypoint x="220" y="300" /><di:waypoint x="260" y="300" /><di:waypoint x="260" y="260" /><di:waypoint x="300" y="260" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-L0-006_di" bpmnElement="FLOW-L0-006"><di:waypoint x="220" y="300" /><di:waypoint x="260" y="300" /><di:waypoint x="260" y="330" /><di:waypoint x="300" y="330" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-L0-007_di" bpmnElement="FLOW-L0-007"><di:waypoint x="195" y="325" /><di:waypoint x="195" y="400" /><di:waypoint x="300" y="400" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-L0-008_di" bpmnElement="FLOW-L0-008"><di:waypoint x="195" y="325" /><di:waypoint x="195" y="470" /><di:waypoint x="300" y="470" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-L0-009_di" bpmnElement="FLOW-L0-009"><di:waypoint x="195" y="325" /><di:waypoint x="195" y="540" /><di:waypoint x="300" y="540" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-L0-010_di" bpmnElement="FLOW-L0-010"><di:waypoint x="430" y="50" /><di:waypoint x="535" y="50" /><di:waypoint x="535" y="275" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-L0-011_di" bpmnElement="FLOW-L0-011"><di:waypoint x="430" y="120" /><di:waypoint x="535" y="120" /><di:waypoint x="535" y="275" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-L0-012_di" bpmnElement="FLOW-L0-012"><di:waypoint x="430" y="190" /><di:waypoint x="535" y="190" /><di:waypoint x="535" y="275" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-L0-013_di" bpmnElement="FLOW-L0-013"><di:waypoint x="430" y="260" /><di:waypoint x="510" y="260" /><di:waypoint x="510" y="300" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-L0-014_di" bpmnElement="FLOW-L0-014"><di:waypoint x="430" y="330" /><di:waypoint x="510" y="330" /><di:waypoint x="510" y="300" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-L0-015_di" bpmnElement="FLOW-L0-015"><di:waypoint x="430" y="400" /><di:waypoint x="535" y="400" /><di:waypoint x="535" y="325" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-L0-016_di" bpmnElement="FLOW-L0-016"><di:waypoint x="430" y="470" /><di:waypoint x="535" y="470" /><di:waypoint x="535" y="325" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-L0-017_di" bpmnElement="FLOW-L0-017"><di:waypoint x="430" y="540" /><di:waypoint x="535" y="540" /><di:waypoint x="535" y="325" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-L0-018_di" bpmnElement="FLOW-L0-018"><di:waypoint x="560" y="300" /><di:waypoint x="640" y="300" /></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

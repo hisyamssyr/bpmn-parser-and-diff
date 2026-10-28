@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_P2P_L2" targetNamespace="https://simple-erp.local/bpmn">
+  <bpmn:collaboration id="COLLAB-P2P-L2">
+    <bpmn:participant id="PART-P2P-SUPPLIER" name="Supplier" />
+    <bpmn:participant id="PART-P2P-ERP" name="Mini ERP" processRef="P2P-L2-001" />
+    <bpmn:messageFlow id="MSG-P2P-001" name="Purchase order" sourceRef="PUR-PO-002" targetRef="PART-P2P-SUPPLIER" />
+    <bpmn:messageFlow id="MSG-P2P-002" name="Goods and delivery note" sourceRef="PART-P2P-SUPPLIER" targetRef="PUR-GR-001" />
+    <bpmn:messageFlow id="MSG-P2P-003" name="Supplier invoice" sourceRef="PART-P2P-SUPPLIER" targetRef="PUR-INV-001" />
+    <bpmn:messageFlow id="MSG-P2P-004" name="Payment confirmation" sourceRef="PUR-PAY-002" targetRef="PART-P2P-SUPPLIER" />
+  </bpmn:collaboration>
+  <bpmn:process id="P2P-L2-001" name="Procure-to-Pay Level 2" isExecutable="false">
+    <bpmn:laneSet id="LANESET-P2P-001">
+      <bpmn:lane id="LANE-P2P-OPERATOR" name="Operator">
+        <bpmn:flowNodeRef>P2P-START</bpmn:flowNodeRef><bpmn:flowNodeRef>PUR-PR-001</bpmn:flowNodeRef><bpmn:flowNodeRef>PUR-PR-002</bpmn:flowNodeRef><bpmn:flowNodeRef>PUR-PO-001</bpmn:flowNodeRef><bpmn:flowNodeRef>GW-P2P-RECEIVE-MERGE</bpmn:flowNodeRef><bpmn:flowNodeRef>PUR-GR-001</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="LANE-P2P-ADMIN" name="Admin">
+        <bpmn:flowNodeRef>PUR-PR-003</bpmn:flowNodeRef><bpmn:flowNodeRef>GW-P2P-APPROVED</bpmn:flowNodeRef><bpmn:flowNodeRef>P2P-END-REJECTED</bpmn:flowNodeRef><bpmn:flowNodeRef>PUR-INV-001</bpmn:flowNodeRef><bpmn:flowNodeRef>PUR-INV-003</bpmn:flowNodeRef><bpmn:flowNodeRef>PUR-PAY-001</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="LANE-P2P-SYSTEM" name="System">
+        <bpmn:flowNodeRef>PUR-PO-002</bpmn:flowNodeRef><bpmn:flowNodeRef>PUR-GR-002</bpmn:flowNodeRef><bpmn:flowNodeRef>GW-P2P-RECEIVED</bpmn:flowNodeRef><bpmn:flowNodeRef>GW-P2P-MATCH-MERGE</bpmn:flowNodeRef><bpmn:flowNodeRef>PUR-INV-002</bpmn:flowNodeRef><bpmn:flowNodeRef>GW-P2P-MATCHED</bpmn:flowNodeRef><bpmn:flowNodeRef>GW-P2P-PAY-MERGE</bpmn:flowNodeRef><bpmn:flowNodeRef>PUR-PAY-002</bpmn:flowNodeRef><bpmn:flowNodeRef>GW-P2P-PAID</bpmn:flowNodeRef><bpmn:flowNodeRef>PUR-CLOSE-001</bpmn:flowNodeRef><bpmn:flowNodeRef>P2P-END-COMPLETED</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="P2P-START" name="Purchase need identified"><bpmn:outgoing>FLOW-P2P-001</bpmn:outgoing></bpmn:startEvent>
+    <bpmn:userTask id="PUR-PR-001" name="Create purchase request"><bpmn:incoming>FLOW-P2P-001</bpmn:incoming><bpmn:outgoing>FLOW-P2P-002</bpmn:outgoing></bpmn:userTask>
+    <bpmn:userTask id="PUR-PR-002" name="Submit purchase request"><bpmn:incoming>FLOW-P2P-002</bpmn:incoming><bpmn:outgoing>FLOW-P2P-003</bpmn:outgoing></bpmn:userTask>
+    <bpmn:userTask id="PUR-PR-003" name="Review purchase request"><bpmn:incoming>FLOW-P2P-003</bpmn:incoming><bpmn:outgoing>FLOW-P2P-004</bpmn:outgoing></bpmn:userTask>
+    <bpmn:exclusiveGateway id="GW-P2P-APPROVED" name="Request approved?" default="FLOW-P2P-006"><bpmn:incoming>FLOW-P2P-004</bpmn:incoming><bpmn:outgoing>FLOW-P2P-005</bpmn:outgoing><bpmn:outgoing>FLOW-P2P-006</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:endEvent id="P2P-END-REJECTED" name="Request rejected"><bpmn:incoming>FLOW-P2P-006</bpmn:incoming></bpmn:endEvent>
+    <bpmn:userTask id="PUR-PO-001" name="Create purchase order"><bpmn:incoming>FLOW-P2P-005</bpmn:incoming><bpmn:outgoing>FLOW-P2P-007</bpmn:outgoing></bpmn:userTask>
+    <bpmn:serviceTask id="PUR-PO-002" name="Issue purchase order"><bpmn:incoming>FLOW-P2P-007</bpmn:incoming><bpmn:outgoing>FLOW-P2P-008</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="GW-P2P-RECEIVE-MERGE" name="Await next receipt"><bpmn:incoming>FLOW-P2P-008</bpmn:incoming><bpmn:incoming>FLOW-P2P-011</bpmn:incoming><bpmn:outgoing>FLOW-P2P-008A</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:userTask id="PUR-GR-001" name="Receive goods"><bpmn:incoming>FLOW-P2P-008A</bpmn:incoming><bpmn:outgoing>FLOW-P2P-009</bpmn:outgoing></bpmn:userTask>
+    <bpmn:serviceTask id="PUR-GR-002" name="Post goods receipt and stock"><bpmn:incoming>FLOW-P2P-009</bpmn:incoming><bpmn:outgoing>FLOW-P2P-010</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="GW-P2P-RECEIVED" name="All goods received?" default="FLOW-P2P-011"><bpmn:incoming>FLOW-P2P-010</bpmn:incoming><bpmn:outgoing>FLOW-P2P-011</bpmn:outgoing><bpmn:outgoing>FLOW-P2P-012</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:userTask id="PUR-INV-001" name="Record supplier invoice"><bpmn:incoming>FLOW-P2P-012</bpmn:incoming><bpmn:outgoing>FLOW-P2P-013</bpmn:outgoing></bpmn:userTask>
+    <bpmn:exclusiveGateway id="GW-P2P-MATCH-MERGE" name="Evaluate invoice"><bpmn:incoming>FLOW-P2P-013</bpmn:incoming><bpmn:incoming>FLOW-P2P-016</bpmn:incoming><bpmn:outgoing>FLOW-P2P-013A</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="PUR-INV-002" name="Validate three-way match"><bpmn:incoming>FLOW-P2P-013A</bpmn:incoming><bpmn:outgoing>FLOW-P2P-014</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="GW-P2P-MATCHED" name="Invoice matched?" default="FLOW-P2P-017"><bpmn:incoming>FLOW-P2P-014</bpmn:incoming><bpmn:outgoing>FLOW-P2P-015</bpmn:outgoing><bpmn:outgoing>FLOW-P2P-017</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:userTask id="PUR-INV-003" name="Resolve invoice mismatch"><bpmn:incoming>FLOW-P2P-017</bpmn:incoming><bpmn:outgoing>FLOW-P2P-016</bpmn:outgoing></bpmn:userTask>
+    <bpmn:exclusiveGateway id="GW-P2P-PAY-MERGE" name="Await payment"><bpmn:incoming>FLOW-P2P-015</bpmn:incoming><bpmn:incoming>FLOW-P2P-021</bpmn:incoming><bpmn:outgoing>FLOW-P2P-015A</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:userTask id="PUR-PAY-001" name="Record supplier payment"><bpmn:incoming>FLOW-P2P-015A</bpmn:incoming><bpmn:outgoing>FLOW-P2P-018</bpmn:outgoing></bpmn:userTask>
+    <bpmn:serviceTask id="PUR-PAY-002" name="Post payment allocation"><bpmn:incoming>FLOW-P2P-018</bpmn:incoming><bpmn:outgoing>FLOW-P2P-019</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="GW-P2P-PAID" name="Invoice fully paid?" default="FLOW-P2P-021"><bpmn:incoming>FLOW-P2P-019</bpmn:incoming><bpmn:outgoing>FLOW-P2P-020</bpmn:outgoing><bpmn:outgoing>FLOW-P2P-021</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="PUR-CLOSE-001" name="Close purchase documents"><bpmn:incoming>FLOW-P2P-020</bpmn:incoming><bpmn:outgoing>FLOW-P2P-022</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:endEvent id="P2P-END-COMPLETED" name="Purchase completed"><bpmn:incoming>FLOW-P2P-022</bpmn:incoming></bpmn:endEvent>
+    <bpmn:sequenceFlow id="FLOW-P2P-001" sourceRef="P2P-START" targetRef="PUR-PR-001" />
+    <bpmn:sequenceFlow id="FLOW-P2P-002" sourceRef="PUR-PR-001" targetRef="PUR-PR-002" />
+    <bpmn:sequenceFlow id="FLOW-P2P-003" sourceRef="PUR-PR-002" targetRef="PUR-PR-003" />
+    <bpmn:sequenceFlow id="FLOW-P2P-004" sourceRef="PUR-PR-003" targetRef="GW-P2P-APPROVED" />
+    <bpmn:sequenceFlow id="FLOW-P2P-005" name="Approved" sourceRef="GW-P2P-APPROVED" targetRef="PUR-PO-001"><bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">decision = 'APPROVED'</bpmn:conditionExpression></bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="FLOW-P2P-006" name="Rejected" sourceRef="GW-P2P-APPROVED" targetRef="P2P-END-REJECTED" />
+    <bpmn:sequenceFlow id="FLOW-P2P-007" sourceRef="PUR-PO-001" targetRef="PUR-PO-002" />
+    <bpmn:sequenceFlow id="FLOW-P2P-008" sourceRef="PUR-PO-002" targetRef="GW-P2P-RECEIVE-MERGE" />
+    <bpmn:sequenceFlow id="FLOW-P2P-008A" sourceRef="GW-P2P-RECEIVE-MERGE" targetRef="PUR-GR-001" />
+    <bpmn:sequenceFlow id="FLOW-P2P-009" sourceRef="PUR-GR-001" targetRef="PUR-GR-002" />
+    <bpmn:sequenceFlow id="FLOW-P2P-010" sourceRef="PUR-GR-002" targetRef="GW-P2P-RECEIVED" />
+    <bpmn:sequenceFlow id="FLOW-P2P-011" name="Remaining quantity" sourceRef="GW-P2P-RECEIVED" targetRef="GW-P2P-RECEIVE-MERGE" />
+    <bpmn:sequenceFlow id="FLOW-P2P-012" name="Complete" sourceRef="GW-P2P-RECEIVED" targetRef="PUR-INV-001"><bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">allGoodsReceived = true</bpmn:conditionExpression></bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="FLOW-P2P-013" sourceRef="PUR-INV-001" targetRef="GW-P2P-MATCH-MERGE" />
+    <bpmn:sequenceFlow id="FLOW-P2P-013A" sourceRef="GW-P2P-MATCH-MERGE" targetRef="PUR-INV-002" />
+    <bpmn:sequenceFlow id="FLOW-P2P-014" sourceRef="PUR-INV-002" targetRef="GW-P2P-MATCHED" />
+    <bpmn:sequenceFlow id="FLOW-P2P-015" name="Matched" sourceRef="GW-P2P-MATCHED" targetRef="GW-P2P-PAY-MERGE"><bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">invoiceMatched = true</bpmn:conditionExpression></bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="FLOW-P2P-017" name="Mismatch" sourceRef="GW-P2P-MATCHED" targetRef="PUR-INV-003" />
+    <bpmn:sequenceFlow id="FLOW-P2P-016" sourceRef="PUR-INV-003" targetRef="GW-P2P-MATCH-MERGE" />
+    <bpmn:sequenceFlow id="FLOW-P2P-015A" sourceRef="GW-P2P-PAY-MERGE" targetRef="PUR-PAY-001" />
+    <bpmn:sequenceFlow id="FLOW-P2P-018" sourceRef="PUR-PAY-001" targetRef="PUR-PAY-002" />
+    <bpmn:sequenceFlow id="FLOW-P2P-019" sourceRef="PUR-PAY-002" targetRef="GW-P2P-PAID" />
+    <bpmn:sequenceFlow id="FLOW-P2P-020" name="Fully paid" sourceRef="GW-P2P-PAID" targetRef="PUR-CLOSE-001"><bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">outstandingAmount = 0</bpmn:conditionExpression></bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="FLOW-P2P-021" name="Balance remains" sourceRef="GW-P2P-PAID" targetRef="GW-P2P-PAY-MERGE" />
+    <bpmn:sequenceFlow id="FLOW-P2P-022" sourceRef="PUR-CLOSE-001" targetRef="P2P-END-COMPLETED" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagram_P2P_L2">
+    <bpmndi:BPMNPlane id="Plane_P2P_L2" bpmnElement="COLLAB-P2P-L2">
+      <bpmndi:BPMNShape id="PART-P2P-SUPPLIER_di" bpmnElement="PART-P2P-SUPPLIER" isHorizontal="true"><dc:Bounds x="40" y="20" width="3000" height="60" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PART-P2P-ERP_di" bpmnElement="PART-P2P-ERP" isHorizontal="true"><dc:Bounds x="40" y="100" width="3000" height="480" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="LANE-P2P-OPERATOR_di" bpmnElement="LANE-P2P-OPERATOR" isHorizontal="true"><dc:Bounds x="70" y="100" width="2970" height="160" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="LANE-P2P-ADMIN_di" bpmnElement="LANE-P2P-ADMIN" isHorizontal="true"><dc:Bounds x="70" y="260" width="2970" height="160" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="LANE-P2P-SYSTEM_di" bpmnElement="LANE-P2P-SYSTEM" isHorizontal="true"><dc:Bounds x="70" y="420" width="2970" height="160" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P2P-START_di" bpmnElement="P2P-START"><dc:Bounds x="100" y="162" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PUR-PR-001_di" bpmnElement="PUR-PR-001"><dc:Bounds x="180" y="140" width="110" height="80" /><bpmndi:BPMNLabel /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PUR-PR-002_di" bpmnElement="PUR-PR-002"><dc:Bounds x="340" y="140" width="110" height="80" /><bpmndi:BPMNLabel /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PUR-PR-003_di" bpmnElement="PUR-PR-003"><dc:Bounds x="500" y="300" width="110" height="80" /><bpmndi:BPMNLabel /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GW-P2P-APPROVED_di" bpmnElement="GW-P2P-APPROVED" isMarkerVisible="true"><dc:Bounds x="660" y="315" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P2P-END-REJECTED_di" bpmnElement="P2P-END-REJECTED"><dc:Bounds x="770" y="372" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PUR-PO-001_di" bpmnElement="PUR-PO-001"><dc:Bounds x="760" y="140" width="110" height="80" /><bpmndi:BPMNLabel /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PUR-PO-002_di" bpmnElement="PUR-PO-002"><dc:Bounds x="920" y="460" width="110" height="80" /><bpmndi:BPMNLabel /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GW-P2P-RECEIVE-MERGE_di" bpmnElement="GW-P2P-RECEIVE-MERGE" isMarkerVisible="true"><dc:Bounds x="1060" y="275" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PUR-GR-001_di" bpmnElement="PUR-GR-001"><dc:Bounds x="1080" y="140" width="110" height="80" /><bpmndi:BPMNLabel /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PUR-GR-002_di" bpmnElement="PUR-GR-002"><dc:Bounds x="1240" y="460" width="120" height="80" /><bpmndi:BPMNLabel /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GW-P2P-RECEIVED_di" bpmnElement="GW-P2P-RECEIVED" isMarkerVisible="true"><dc:Bounds x="1410" y="475" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PUR-INV-001_di" bpmnElement="PUR-INV-001"><dc:Bounds x="1530" y="300" width="120" height="80" /><bpmndi:BPMNLabel /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GW-P2P-MATCH-MERGE_di" bpmnElement="GW-P2P-MATCH-MERGE" isMarkerVisible="true"><dc:Bounds x="1660" y="390" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PUR-INV-002_di" bpmnElement="PUR-INV-002"><dc:Bounds x="1700" y="460" width="120" height="80" /><bpmndi:BPMNLabel /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GW-P2P-MATCHED_di" bpmnElement="GW-P2P-MATCHED" isMarkerVisible="true"><dc:Bounds x="1870" y="475" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PUR-INV-003_di" bpmnElement="PUR-INV-003"><dc:Bounds x="1860" y="300" width="120" height="80" /><bpmndi:BPMNLabel /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GW-P2P-PAY-MERGE_di" bpmnElement="GW-P2P-PAY-MERGE" isMarkerVisible="true"><dc:Bounds x="1990" y="390" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PUR-PAY-001_di" bpmnElement="PUR-PAY-001"><dc:Bounds x="2030" y="300" width="120" height="80" /><bpmndi:BPMNLabel /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PUR-PAY-002_di" bpmnElement="PUR-PAY-002"><dc:Bounds x="2200" y="460" width="120" height="80" /><bpmndi:BPMNLabel /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GW-P2P-PAID_di" bpmnElement="GW-P2P-PAID" isMarkerVisible="true"><dc:Bounds x="2370" y="475" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PUR-CLOSE-001_di" bpmnElement="PUR-CLOSE-001"><dc:Bounds x="2530" y="460" width="120" height="80" /><bpmndi:BPMNLabel /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P2P-END-COMPLETED_di" bpmnElement="P2P-END-COMPLETED"><dc:Bounds x="2730" y="482" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="FLOW-P2P-001_di" bpmnElement="FLOW-P2P-001"><di:waypoint x="136" y="180" /><di:waypoint x="180" y="180" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-P2P-002_di" bpmnElement="FLOW-P2P-002"><di:waypoint x="290" y="180" /><di:waypoint x="340" y="180" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-P2P-003_di" bpmnElement="FLOW-P2P-003"><di:waypoint x="450" y="180" /><di:waypoint x="475" y="180" /><di:waypoint x="475" y="340" /><di:waypoint x="500" y="340" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-P2P-004_di" bpmnElement="FLOW-P2P-004"><di:waypoint x="610" y="340" /><di:waypoint x="660" y="340" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-P2P-005_di" bpmnElement="FLOW-P2P-005"><di:waypoint x="685" y="315" /><di:waypoint x="685" y="180" /><di:waypoint x="760" y="180" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-P2P-006_di" bpmnElement="FLOW-P2P-006"><di:waypoint x="685" y="365" /><di:waypoint x="685" y="390" /><di:waypoint x="770" y="390" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-P2P-007_di" bpmnElement="FLOW-P2P-007"><di:waypoint x="870" y="180" /><di:waypoint x="895" y="180" /><di:waypoint x="895" y="500" /><di:waypoint x="920" y="500" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-P2P-008_di" bpmnElement="FLOW-P2P-008"><di:waypoint x="1030" y="500" /><di:waypoint x="1085" y="500" /><di:waypoint x="1085" y="325" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-P2P-008A_di" bpmnElement="FLOW-P2P-008A"><di:waypoint x="1085" y="275" /><di:waypoint x="1085" y="220" /><di:waypoint x="1135" y="220" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-P2P-009_di" bpmnElement="FLOW-P2P-009"><di:waypoint x="1190" y="180" /><di:waypoint x="1215" y="180" /><di:waypoint x="1215" y="500" /><di:waypoint x="1240" y="500" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-P2P-010_di" bpmnElement="FLOW-P2P-010"><di:waypoint x="1360" y="500" /><di:waypoint x="1410" y="500" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-P2P-011_di" bpmnElement="FLOW-P2P-011"><di:waypoint x="1435" y="475" /><di:waypoint x="1435" y="300" /><di:waypoint x="1110" y="300" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-P2P-012_di" bpmnElement="FLOW-P2P-012"><di:waypoint x="1460" y="500" /><di:waypoint x="1495" y="500" /><di:waypoint x="1495" y="340" /><di:waypoint x="1530" y="340" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-P2P-013_di" bpmnElement="FLOW-P2P-013"><di:waypoint x="1650" y="340" /><di:waypoint x="1685" y="340" /><di:waypoint x="1685" y="390" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-P2P-013A_di" bpmnElement="FLOW-P2P-013A"><di:waypoint x="1710" y="415" /><di:waypoint x="1760" y="415" /><di:waypoint x="1760" y="460" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-P2P-014_di" bpmnElement="FLOW-P2P-014"><di:waypoint x="1820" y="500" /><di:waypoint x="1870" y="500" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-P2P-015_di" bpmnElement="FLOW-P2P-015"><di:waypoint x="1920" y="500" /><di:waypoint x="2015" y="500" /><di:waypoint x="2015" y="440" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-P2P-017_di" bpmnElement="FLOW-P2P-017"><di:waypoint x="1895" y="475" /><di:waypoint x="1895" y="380" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-P2P-016_di" bpmnElement="FLOW-P2P-016"><di:waypoint x="1860" y="340" /><di:waypoint x="1685" y="340" /><di:waypoint x="1685" y="390" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-P2P-015A_di" bpmnElement="FLOW-P2P-015A"><di:waypoint x="2040" y="415" /><di:waypoint x="2090" y="415" /><di:waypoint x="2090" y="380" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-P2P-018_di" bpmnElement="FLOW-P2P-018"><di:waypoint x="2150" y="340" /><di:waypoint x="2175" y="340" /><di:waypoint x="2175" y="500" /><di:waypoint x="2200" y="500" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-P2P-019_di" bpmnElement="FLOW-P2P-019"><di:waypoint x="2320" y="500" /><di:waypoint x="2370" y="500" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-P2P-020_di" bpmnElement="FLOW-P2P-020"><di:waypoint x="2420" y="500" /><di:waypoint x="2530" y="500" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-P2P-021_di" bpmnElement="FLOW-P2P-021"><di:waypoint x="2395" y="475" /><di:waypoint x="2395" y="415" /><di:waypoint x="2040" y="415" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-P2P-022_di" bpmnElement="FLOW-P2P-022"><di:waypoint x="2650" y="500" /><di:waypoint x="2730" y="500" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MSG-P2P-001_di" bpmnElement="MSG-P2P-001"><di:waypoint x="975" y="460" /><di:waypoint x="975" y="80" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MSG-P2P-002_di" bpmnElement="MSG-P2P-002"><di:waypoint x="1135" y="80" /><di:waypoint x="1135" y="140" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MSG-P2P-003_di" bpmnElement="MSG-P2P-003"><di:waypoint x="1590" y="80" /><di:waypoint x="1590" y="300" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MSG-P2P-004_di" bpmnElement="MSG-P2P-004"><di:waypoint x="2260" y="460" /><di:waypoint x="2260" y="80" /></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

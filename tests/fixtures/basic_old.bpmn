@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  id="Definitions_S00"
+                  targetNamespace="http://example.com/bpmn">
+  <bpmn:process id="P2P" name="Procure to Pay" isExecutable="false">
+    <bpmn:laneSet>
+      <bpmn:lane id="LANE-PUR" name="Purchasing">
+        <bpmn:flowNodeRef>S00</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="START" name="Mulai"/>
+    <bpmn:subProcess id="S00" name="Verifikasi Dokumen">
+      <bpmn:documentation>Dokumen diperiksa</bpmn:documentation>
+    </bpmn:subProcess>
+    <bpmn:endEvent id="END" name="Selesai"/>
+    <bpmn:sequenceFlow id="F1" sourceRef="START" targetRef="S00"/>
+    <bpmn:sequenceFlow id="F2" sourceRef="S00" targetRef="END"/>
+  </bpmn:process>
+</bpmn:definitions>

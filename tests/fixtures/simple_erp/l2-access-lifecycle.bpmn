@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_AUTH_L2" targetNamespace="https://simple-erp.local/bpmn">
+  <bpmn:collaboration id="COLLAB-AUTH-L2">
+    <bpmn:participant id="PART-AUTH-ERP" name="Mini ERP" processRef="AUTH-L2-001" />
+  </bpmn:collaboration>
+  <bpmn:process id="AUTH-L2-001" name="User Invitation and Password Reset" isExecutable="false">
+    <bpmn:laneSet id="LANESET-AUTH-001">
+      <bpmn:lane id="LANE-AUTH-ADMIN" name="Admin">
+        <bpmn:flowNodeRef>AUTH-START</bpmn:flowNodeRef><bpmn:flowNodeRef>GW-AUTH-REQUEST-TYPE</bpmn:flowNodeRef><bpmn:flowNodeRef>AUTH-USR-001</bpmn:flowNodeRef><bpmn:flowNodeRef>AUTH-USR-003</bpmn:flowNodeRef><bpmn:flowNodeRef>AUTH-PWD-001</bpmn:flowNodeRef><bpmn:flowNodeRef>AUTH-PWD-003</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="LANE-AUTH-USER" name="User">
+        <bpmn:flowNodeRef>AUTH-USR-004</bpmn:flowNodeRef><bpmn:flowNodeRef>AUTH-PWD-004</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="LANE-AUTH-SYSTEM" name="System">
+        <bpmn:flowNodeRef>AUTH-USR-002</bpmn:flowNodeRef><bpmn:flowNodeRef>AUTH-USR-005</bpmn:flowNodeRef><bpmn:flowNodeRef>AUTH-PWD-002</bpmn:flowNodeRef><bpmn:flowNodeRef>AUTH-PWD-005</bpmn:flowNodeRef><bpmn:flowNodeRef>GW-AUTH-COMPLETE-MERGE</bpmn:flowNodeRef><bpmn:flowNodeRef>AUTH-END</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="AUTH-START" name="Access administration requested"><bpmn:outgoing>FLOW-AUTH-001</bpmn:outgoing></bpmn:startEvent>
+    <bpmn:exclusiveGateway id="GW-AUTH-REQUEST-TYPE" name="Invitation or password reset?" default="FLOW-AUTH-003"><bpmn:incoming>FLOW-AUTH-001</bpmn:incoming><bpmn:outgoing>FLOW-AUTH-002</bpmn:outgoing><bpmn:outgoing>FLOW-AUTH-003</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:userTask id="AUTH-USR-001" name="Create user invitation"><bpmn:incoming>FLOW-AUTH-002</bpmn:incoming><bpmn:outgoing>FLOW-AUTH-004</bpmn:outgoing></bpmn:userTask>
+    <bpmn:serviceTask id="AUTH-USR-002" name="Generate invitation token"><bpmn:incoming>FLOW-AUTH-004</bpmn:incoming><bpmn:outgoing>FLOW-AUTH-005</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:userTask id="AUTH-USR-003" name="Share invitation link manually"><bpmn:incoming>FLOW-AUTH-005</bpmn:incoming><bpmn:outgoing>FLOW-AUTH-006</bpmn:outgoing></bpmn:userTask>
+    <bpmn:userTask id="AUTH-USR-004" name="Set initial password"><bpmn:incoming>FLOW-AUTH-006</bpmn:incoming><bpmn:outgoing>FLOW-AUTH-007</bpmn:outgoing></bpmn:userTask>
+    <bpmn:serviceTask id="AUTH-USR-005" name="Activate invited account"><bpmn:incoming>FLOW-AUTH-007</bpmn:incoming><bpmn:outgoing>FLOW-AUTH-008</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:userTask id="AUTH-PWD-001" name="Create password reset"><bpmn:incoming>FLOW-AUTH-003</bpmn:incoming><bpmn:outgoing>FLOW-AUTH-009</bpmn:outgoing></bpmn:userTask>
+    <bpmn:serviceTask id="AUTH-PWD-002" name="Generate password reset token"><bpmn:incoming>FLOW-AUTH-009</bpmn:incoming><bpmn:outgoing>FLOW-AUTH-010</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:userTask id="AUTH-PWD-003" name="Share password reset link manually"><bpmn:incoming>FLOW-AUTH-010</bpmn:incoming><bpmn:outgoing>FLOW-AUTH-011</bpmn:outgoing></bpmn:userTask>
+    <bpmn:userTask id="AUTH-PWD-004" name="Set new password"><bpmn:incoming>FLOW-AUTH-011</bpmn:incoming><bpmn:outgoing>FLOW-AUTH-012</bpmn:outgoing></bpmn:userTask>
+    <bpmn:serviceTask id="AUTH-PWD-005" name="Consume reset and revoke sessions"><bpmn:incoming>FLOW-AUTH-012</bpmn:incoming><bpmn:outgoing>FLOW-AUTH-013</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="GW-AUTH-COMPLETE-MERGE" name="Access action completed"><bpmn:incoming>FLOW-AUTH-008</bpmn:incoming><bpmn:incoming>FLOW-AUTH-013</bpmn:incoming><bpmn:outgoing>FLOW-AUTH-014</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:endEvent id="AUTH-END" name="User access ready"><bpmn:incoming>FLOW-AUTH-014</bpmn:incoming></bpmn:endEvent>
+    <bpmn:sequenceFlow id="FLOW-AUTH-001" sourceRef="AUTH-START" targetRef="GW-AUTH-REQUEST-TYPE" />
+    <bpmn:sequenceFlow id="FLOW-AUTH-002" name="Invitation" sourceRef="GW-AUTH-REQUEST-TYPE" targetRef="AUTH-USR-001"><bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">requestType = 'INVITATION'</bpmn:conditionExpression></bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="FLOW-AUTH-003" name="Password reset" sourceRef="GW-AUTH-REQUEST-TYPE" targetRef="AUTH-PWD-001" />
+    <bpmn:sequenceFlow id="FLOW-AUTH-004" sourceRef="AUTH-USR-001" targetRef="AUTH-USR-002" />
+    <bpmn:sequenceFlow id="FLOW-AUTH-005" sourceRef="AUTH-USR-002" targetRef="AUTH-USR-003" />
+    <bpmn:sequenceFlow id="FLOW-AUTH-006" sourceRef="AUTH-USR-003" targetRef="AUTH-USR-004" />
+    <bpmn:sequenceFlow id="FLOW-AUTH-007" sourceRef="AUTH-USR-004" targetRef="AUTH-USR-005" />
+    <bpmn:sequenceFlow id="FLOW-AUTH-008" sourceRef="AUTH-USR-005" targetRef="GW-AUTH-COMPLETE-MERGE" />
+    <bpmn:sequenceFlow id="FLOW-AUTH-009" sourceRef="AUTH-PWD-001" targetRef="AUTH-PWD-002" />
+    <bpmn:sequenceFlow id="FLOW-AUTH-010" sourceRef="AUTH-PWD-002" targetRef="AUTH-PWD-003" />
+    <bpmn:sequenceFlow id="FLOW-AUTH-011" sourceRef="AUTH-PWD-003" targetRef="AUTH-PWD-004" />
+    <bpmn:sequenceFlow id="FLOW-AUTH-012" sourceRef="AUTH-PWD-004" targetRef="AUTH-PWD-005" />
+    <bpmn:sequenceFlow id="FLOW-AUTH-013" sourceRef="AUTH-PWD-005" targetRef="GW-AUTH-COMPLETE-MERGE" />
+    <bpmn:sequenceFlow id="FLOW-AUTH-014" sourceRef="GW-AUTH-COMPLETE-MERGE" targetRef="AUTH-END" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagram_AUTH_L2">
+    <bpmndi:BPMNPlane id="Plane_AUTH_L2" bpmnElement="COLLAB-AUTH-L2">
+      <bpmndi:BPMNShape id="PART-AUTH-ERP_di" bpmnElement="PART-AUTH-ERP" isHorizontal="true"><dc:Bounds x="40" y="40" width="1320" height="680" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="LANE-AUTH-ADMIN_di" bpmnElement="LANE-AUTH-ADMIN" isHorizontal="true"><dc:Bounds x="70" y="40" width="1290" height="240" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="LANE-AUTH-USER_di" bpmnElement="LANE-AUTH-USER" isHorizontal="true"><dc:Bounds x="70" y="280" width="1290" height="200" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="LANE-AUTH-SYSTEM_di" bpmnElement="LANE-AUTH-SYSTEM" isHorizontal="true"><dc:Bounds x="70" y="480" width="1290" height="240" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AUTH-START_di" bpmnElement="AUTH-START"><dc:Bounds x="100" y="142" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GW-AUTH-REQUEST-TYPE_di" bpmnElement="GW-AUTH-REQUEST-TYPE" isMarkerVisible="true"><dc:Bounds x="170" y="135" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AUTH-USR-001_di" bpmnElement="AUTH-USR-001"><dc:Bounds x="260" y="70" width="120" height="80" /><bpmndi:BPMNLabel /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AUTH-USR-002_di" bpmnElement="AUTH-USR-002"><dc:Bounds x="430" y="500" width="120" height="80" /><bpmndi:BPMNLabel /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AUTH-USR-003_di" bpmnElement="AUTH-USR-003"><dc:Bounds x="600" y="70" width="120" height="80" /><bpmndi:BPMNLabel /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AUTH-USR-004_di" bpmnElement="AUTH-USR-004"><dc:Bounds x="770" y="300" width="120" height="80" /><bpmndi:BPMNLabel /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AUTH-USR-005_di" bpmnElement="AUTH-USR-005"><dc:Bounds x="940" y="500" width="120" height="80" /><bpmndi:BPMNLabel /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AUTH-PWD-001_di" bpmnElement="AUTH-PWD-001"><dc:Bounds x="260" y="170" width="120" height="80" /><bpmndi:BPMNLabel /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AUTH-PWD-002_di" bpmnElement="AUTH-PWD-002"><dc:Bounds x="430" y="610" width="120" height="80" /><bpmndi:BPMNLabel /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AUTH-PWD-003_di" bpmnElement="AUTH-PWD-003"><dc:Bounds x="600" y="170" width="120" height="80" /><bpmndi:BPMNLabel /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AUTH-PWD-004_di" bpmnElement="AUTH-PWD-004"><dc:Bounds x="770" y="390" width="120" height="80" /><bpmndi:BPMNLabel /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AUTH-PWD-005_di" bpmnElement="AUTH-PWD-005"><dc:Bounds x="940" y="610" width="120" height="80" /><bpmndi:BPMNLabel /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GW-AUTH-COMPLETE-MERGE_di" bpmnElement="GW-AUTH-COMPLETE-MERGE" isMarkerVisible="true"><dc:Bounds x="1110" y="565" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AUTH-END_di" bpmnElement="AUTH-END"><dc:Bounds x="1240" y="572" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="FLOW-AUTH-001_di" bpmnElement="FLOW-AUTH-001"><di:waypoint x="136" y="160" /><di:waypoint x="170" y="160" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-AUTH-002_di" bpmnElement="FLOW-AUTH-002"><di:waypoint x="195" y="135" /><di:waypoint x="195" y="110" /><di:waypoint x="260" y="110" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-AUTH-003_di" bpmnElement="FLOW-AUTH-003"><di:waypoint x="195" y="185" /><di:waypoint x="195" y="210" /><di:waypoint x="260" y="210" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-AUTH-004_di" bpmnElement="FLOW-AUTH-004"><di:waypoint x="380" y="110" /><di:waypoint x="405" y="110" /><di:waypoint x="405" y="540" /><di:waypoint x="430" y="540" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-AUTH-005_di" bpmnElement="FLOW-AUTH-005"><di:waypoint x="550" y="540" /><di:waypoint x="575" y="540" /><di:waypoint x="575" y="110" /><di:waypoint x="600" y="110" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-AUTH-006_di" bpmnElement="FLOW-AUTH-006"><di:waypoint x="720" y="110" /><di:waypoint x="745" y="110" /><di:waypoint x="745" y="340" /><di:waypoint x="770" y="340" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-AUTH-007_di" bpmnElement="FLOW-AUTH-007"><di:waypoint x="890" y="340" /><di:waypoint x="915" y="340" /><di:waypoint x="915" y="540" /><di:waypoint x="940" y="540" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-AUTH-008_di" bpmnElement="FLOW-AUTH-008"><di:waypoint x="1060" y="540" /><di:waypoint x="1085" y="540" /><di:waypoint x="1085" y="590" /><di:waypoint x="1110" y="590" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-AUTH-009_di" bpmnElement="FLOW-AUTH-009"><di:waypoint x="380" y="210" /><di:waypoint x="405" y="210" /><di:waypoint x="405" y="650" /><di:waypoint x="430" y="650" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-AUTH-010_di" bpmnElement="FLOW-AUTH-010"><di:waypoint x="550" y="650" /><di:waypoint x="575" y="650" /><di:waypoint x="575" y="210" /><di:waypoint x="600" y="210" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-AUTH-011_di" bpmnElement="FLOW-AUTH-011"><di:waypoint x="720" y="210" /><di:waypoint x="745" y="210" /><di:waypoint x="745" y="430" /><di:waypoint x="770" y="430" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-AUTH-012_di" bpmnElement="FLOW-AUTH-012"><di:waypoint x="890" y="430" /><di:waypoint x="915" y="430" /><di:waypoint x="915" y="650" /><di:waypoint x="940" y="650" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-AUTH-013_di" bpmnElement="FLOW-AUTH-013"><di:waypoint x="1060" y="650" /><di:waypoint x="1085" y="650" /><di:waypoint x="1085" y="590" /><di:waypoint x="1110" y="590" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FLOW-AUTH-014_di" bpmnElement="FLOW-AUTH-014"><di:waypoint x="1160" y="590" /><di:waypoint x="1240" y="590" /></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

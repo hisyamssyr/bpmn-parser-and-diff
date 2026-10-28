@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             id="Definitions_Features"
+             targetNamespace="http://example.com/bpmn">
+  <process id="PROC" name="Fitur" isExecutable="false">
+    <laneSet>
+      <lane id="L1" name="Lane">
+        <flowNodeRef>START</flowNodeRef>
+        <flowNodeRef>TASK</flowNodeRef>
+        <flowNodeRef>GW</flowNodeRef>
+        <flowNodeRef>EVT</flowNodeRef>
+        <flowNodeRef>CALL</flowNodeRef>
+        <flowNodeRef>BND</flowNodeRef>
+        <flowNodeRef>END</flowNodeRef>
+      </lane>
+    </laneSet>
+    <startEvent id="START" name="Mulai"/>
+    <userTask id="TASK" name="Kerjakan">
+      <documentation>Dokumen baru</documentation>
+      <standardLoopCharacteristics/>
+    </userTask>
+    <exclusiveGateway id="GW" name="Keputusan"
+                      gatewayDirection="Diverging" default="F4"/>
+    <intermediateCatchEvent id="EVT" name="Tunggu">
+      <timerEventDefinition/>
+    </intermediateCatchEvent>
+    <callActivity id="CALL" name="Panggil" calledElement="PROC-B"/>
+    <boundaryEvent id="BND" name="Batalkan"
+                   attachedToRef="CALL" cancelActivity="false"/>
+    <endEvent id="END" name="Selesai"/>
+    <sequenceFlow id="F1" sourceRef="START" targetRef="TASK"
+                  name="Langkah Baru"/>
+    <sequenceFlow id="F2" sourceRef="TASK" targetRef="GW">
+      <conditionExpression>x &gt; 0</conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="F3" sourceRef="CALL" targetRef="EVT">
+      <conditionExpression>nilai == "tidak"</conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="F4" sourceRef="EVT" targetRef="TASK"
+                  name="Kembali"/>
+  </process>
+</definitions>
