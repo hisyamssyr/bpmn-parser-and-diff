@@ -1,0 +1,395 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- FILE UJI SINTETIS untuk BPMN parser/diff (bukan bagian dari Simple-ERP). Versi BARU (urutan elemen XML sengaja dibalik). -->
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" id="Definitions_P2P_TEST" targetNamespace="http://example.org/bpmn/p2p-test">
+  <bpmn:collaboration id="COLL-1">
+    <bpmn:participant id="PART-P2P" name="Procure to Pay" processRef="P2P" />
+    <bpmn:participant id="PART-NTF" name="Notifikasi" processRef="PROC-NOTIFY" />
+    <bpmn:participant id="PART-NTF2" name="Notifikasi V2" processRef="PROC-NOTIFY-V2" />
+  </bpmn:collaboration>
+  <bpmn:process id="P2P" name="Procure to Pay (P2P)" isExecutable="false">
+    <bpmn:laneSet id="LS-P2P">
+      <bpmn:lane id="L-STAFF" name="Staff Purchasing">
+        <bpmn:flowNodeRef>START</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>PUR-PR-001</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>CALL-NOTIF</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>PUR-PO-001</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>BE-TIMEOUT</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="L-MGR" name="Manajer Pembelian">
+        <bpmn:flowNodeRef>PUR-PR-002</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>SUB-001</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>GW-APPROVE</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>END-REJECT</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>ESC-001</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="L-PROC" name="Procurement">
+        <bpmn:flowNodeRef>PUR-PO-002</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>PUR-PO-003</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="L-WH" name="Gudang">
+        <bpmn:flowNodeRef>INV-GR-001</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>GW-QC</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>INV-RET-001</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="L-FIN" name="Finance">
+        <bpmn:childLaneSet id="LS-L-FIN">
+          <bpmn:lane id="L-FIN-TRS" name="Treasury">
+            <bpmn:flowNodeRef>FIN-PAY-001</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>END-OK</bpmn:flowNodeRef>
+          </bpmn:lane>
+        </bpmn:childLaneSet>
+      </bpmn:lane>
+      <bpmn:lane id="L-FIN-AP" name="Accounts Payable">
+        <bpmn:flowNodeRef>EVT-WAIT</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>FIN-INV-002</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:userTask id="INV-RET-001" name="Retur Barang">
+      <bpmn:incoming>F-012</bpmn:incoming>
+      <bpmn:outgoing>F-022</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="PUR-PO-003" name="Konfirmasi Supplier">
+      <bpmn:incoming>F-008</bpmn:incoming>
+      <bpmn:outgoing>F-020</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="ESC-001" name="Eskalasi ke Direktur">
+      <bpmn:incoming>F-016</bpmn:incoming>
+      <bpmn:outgoing>F-017</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:boundaryEvent id="BE-TIMEOUT" name="Approval Timeout" cancelActivity="false" attachedToRef="PUR-PR-001">
+      <bpmn:outgoing>F-016</bpmn:outgoing>
+      <bpmn:timerEventDefinition><bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT48H</bpmn:timeDuration></bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:endEvent id="END-OK" name="Pembayaran Selesai">
+      <bpmn:incoming>F-015</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="FIN-PAY-001" name="Bayar Supplier">
+      <bpmn:incoming>F-014</bpmn:incoming>
+      <bpmn:outgoing>F-015</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:businessRuleTask id="FIN-INV-002" name="Cocokkan Invoice dengan PO dan GR">
+      <bpmn:documentation>Three-way match: PO, GR, dan invoice supplier.</bpmn:documentation>
+      <bpmn:incoming>F-013</bpmn:incoming>
+      <bpmn:outgoing>F-014</bpmn:outgoing>
+    </bpmn:businessRuleTask>
+    <bpmn:intermediateCatchEvent id="EVT-WAIT" name="Tunggu Invoice">
+      <bpmn:incoming>F-011</bpmn:incoming>
+      <bpmn:outgoing>F-013</bpmn:outgoing>
+      <bpmn:timerEventDefinition><bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT48H</bpmn:timeDuration></bpmn:timerEventDefinition>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:exclusiveGateway id="GW-QC" name="Barang Sesuai?" gatewayDirection="Mixed" default="F-012">
+      <bpmn:incoming>F-021</bpmn:incoming>
+      <bpmn:outgoing>F-012</bpmn:outgoing>
+      <bpmn:outgoing>F-011</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="INV-GR-001" name="Terima Barang">
+      <bpmn:incoming>F-022</bpmn:incoming>
+      <bpmn:incoming>F-020</bpmn:incoming>
+      <bpmn:outgoing>F-021</bpmn:outgoing>
+      <bpmn:multiInstanceLoopCharacteristics isSequential="false" />
+    </bpmn:userTask>
+    <bpmn:sendTask id="PUR-PO-002" name="Kirim PO ke Supplier">
+      <bpmn:incoming>F-007</bpmn:incoming>
+      <bpmn:outgoing>F-008</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:userTask id="PUR-PO-001" name="Buat purchase order">
+      <bpmn:incoming>F-006</bpmn:incoming>
+      <bpmn:outgoing>F-007</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:callActivity id="CALL-NOTIF" name="Kirim Notifikasi" calledElement="PROC-NOTIFY-V2">
+      <bpmn:extensionElements><camunda:properties><camunda:property name="channel" value="email,whatsapp" /></camunda:properties></bpmn:extensionElements>
+      <bpmn:incoming>F-004</bpmn:incoming>
+      <bpmn:outgoing>F-006</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:endEvent id="END-REJECT" name="PR Ditolak">
+      <bpmn:incoming>F-005</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:exclusiveGateway id="GW-APPROVE" name="Disetujui?" gatewayDirection="Diverging" default="F-005">
+      <bpmn:incoming>F-017</bpmn:incoming>
+      <bpmn:incoming>F-003</bpmn:incoming>
+      <bpmn:outgoing>F-005</bpmn:outgoing>
+      <bpmn:outgoing>F-004</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="SUB-001" name="Cek Anggaran">
+      <bpmn:incoming>F-023</bpmn:incoming>
+      <bpmn:outgoing>F-003</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="PUR-PR-002" name="Review Purchase Request">
+      <bpmn:incoming>F-002</bpmn:incoming>
+      <bpmn:outgoing>F-023</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:userTask id="PUR-PR-001" name="Buat Purchase Request" camunda:assignee="kepala-purchasing">
+      <bpmn:incoming>F-001</bpmn:incoming>
+      <bpmn:outgoing>F-002</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:startEvent id="START" name="Kebutuhan  Barang&#10;   Muncul">
+      <bpmn:outgoing>F-001</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="F-022" sourceRef="INV-RET-001" targetRef="INV-GR-001" />
+    <bpmn:sequenceFlow id="F-021" sourceRef="INV-GR-001" targetRef="GW-QC" />
+    <bpmn:sequenceFlow id="F-020" sourceRef="PUR-PO-003" targetRef="INV-GR-001" />
+    <bpmn:sequenceFlow id="F-023" sourceRef="PUR-PR-002" targetRef="SUB-001" />
+    <bpmn:sequenceFlow id="F-017" sourceRef="ESC-001" targetRef="GW-APPROVE" />
+    <bpmn:sequenceFlow id="F-016" sourceRef="BE-TIMEOUT" targetRef="ESC-001" />
+    <bpmn:sequenceFlow id="F-015" sourceRef="FIN-PAY-001" targetRef="END-OK" />
+    <bpmn:sequenceFlow id="F-014" sourceRef="FIN-INV-002" targetRef="FIN-PAY-001" />
+    <bpmn:sequenceFlow id="F-013" sourceRef="EVT-WAIT" targetRef="FIN-INV-002" />
+    <bpmn:sequenceFlow id="F-012" name="Tidak Sesuai" sourceRef="GW-QC" targetRef="INV-RET-001" />
+    <bpmn:sequenceFlow id="F-011" name="  Sesuai " sourceRef="GW-QC" targetRef="EVT-WAIT">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${qc == 'OK'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F-008" sourceRef="PUR-PO-002" targetRef="PUR-PO-003" />
+    <bpmn:sequenceFlow id="F-007" sourceRef="PUR-PO-001" targetRef="PUR-PO-002" />
+    <bpmn:sequenceFlow id="F-006" sourceRef="CALL-NOTIF" targetRef="PUR-PO-001" />
+    <bpmn:sequenceFlow id="F-005" name="Tidak" sourceRef="GW-APPROVE" targetRef="END-REJECT" />
+    <bpmn:sequenceFlow id="F-004" name="Disetujui" sourceRef="GW-APPROVE" targetRef="CALL-NOTIF">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${approved == true &amp;&amp; amount &lt;= limit}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F-003" sourceRef="SUB-001" targetRef="GW-APPROVE" />
+    <bpmn:sequenceFlow id="F-002" sourceRef="PUR-PR-001" targetRef="PUR-PR-002" />
+    <bpmn:sequenceFlow id="F-001" sourceRef="START" targetRef="PUR-PR-001" />
+  </bpmn:process>
+  <bpmn:process id="PROC-NOTIFY" name="Proses Notifikasi" isExecutable="false">
+    <bpmn:endEvent id="NTF-END" name="Notifikasi Terkirim">
+      <bpmn:incoming>NTF-F2</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="NTF-001" name="Kirim Email">
+      <bpmn:incoming>NTF-F1</bpmn:incoming>
+      <bpmn:outgoing>NTF-F2</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:startEvent id="NTF-START" name="Mulai Notifikasi">
+      <bpmn:outgoing>NTF-F1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="NTF-F2" sourceRef="NTF-001" targetRef="NTF-END" />
+    <bpmn:sequenceFlow id="NTF-F1" sourceRef="NTF-START" targetRef="NTF-001" />
+  </bpmn:process>
+  <bpmn:process id="PROC-NOTIFY-V2" name="Proses Notifikasi V2" isExecutable="false">
+    <bpmn:endEvent id="NTF2-END" name="Notifikasi V2 Terkirim">
+      <bpmn:incoming>NTF2-F2</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="NTF2-001" name="Kirim Email dan WhatsApp">
+      <bpmn:incoming>NTF2-F1</bpmn:incoming>
+      <bpmn:outgoing>NTF2-F2</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:startEvent id="NTF2-START" name="Mulai Notifikasi V2">
+      <bpmn:outgoing>NTF2-F1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="NTF2-F2" sourceRef="NTF2-001" targetRef="NTF2-END" />
+    <bpmn:sequenceFlow id="NTF2-F1" sourceRef="NTF2-START" targetRef="NTF2-001" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagram_1">
+    <bpmndi:BPMNPlane id="Plane_1" bpmnElement="COLL-1">
+      <bpmndi:BPMNShape id="PART-P2P_di" bpmnElement="PART-P2P" isHorizontal="true">
+        <dc:Bounds x="100" y="60" width="2350" height="1050" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PART-NTF_di" bpmnElement="PART-NTF" isHorizontal="true">
+        <dc:Bounds x="100" y="1160" width="800" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PART-NTF2_di" bpmnElement="PART-NTF2" isHorizontal="true">
+        <dc:Bounds x="100" y="1360" width="800" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L-STAFF_di" bpmnElement="L-STAFF" isHorizontal="true">
+        <dc:Bounds x="130" y="60" width="2320" height="170" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L-MGR_di" bpmnElement="L-MGR" isHorizontal="true">
+        <dc:Bounds x="130" y="230" width="2320" height="200" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L-PROC_di" bpmnElement="L-PROC" isHorizontal="true">
+        <dc:Bounds x="130" y="430" width="2320" height="170" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L-WH_di" bpmnElement="L-WH" isHorizontal="true">
+        <dc:Bounds x="130" y="600" width="2320" height="170" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L-FIN_di" bpmnElement="L-FIN" isHorizontal="true">
+        <dc:Bounds x="130" y="770" width="2320" height="170" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L-FIN-TRS_di" bpmnElement="L-FIN-TRS" isHorizontal="true">
+        <dc:Bounds x="160" y="770" width="2290" height="170" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L-FIN-AP_di" bpmnElement="L-FIN-AP" isHorizontal="true">
+        <dc:Bounds x="130" y="940" width="2320" height="170" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="START_di" bpmnElement="START">
+        <dc:Bounds x="182" y="127" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PUR-PR-001_di" bpmnElement="PUR-PR-001">
+        <dc:Bounds x="280" y="105" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PUR-PR-002_di" bpmnElement="PUR-PR-002">
+        <dc:Bounds x="430" y="290" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="SUB-001_di" bpmnElement="SUB-001">
+        <dc:Bounds x="590" y="290" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GW-APPROVE_di" bpmnElement="GW-APPROVE">
+        <dc:Bounds x="755" y="305" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="END-REJECT_di" bpmnElement="END-REJECT">
+        <dc:Bounds x="882" y="312" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="CALL-NOTIF_di" bpmnElement="CALL-NOTIF">
+        <dc:Bounds x="850" y="105" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PUR-PO-001_di" bpmnElement="PUR-PO-001">
+        <dc:Bounds x="990" y="105" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PUR-PO-002_di" bpmnElement="PUR-PO-002">
+        <dc:Bounds x="1130" y="475" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="INV-GR-001_di" bpmnElement="INV-GR-001">
+        <dc:Bounds x="1410" y="645" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GW-QC_di" bpmnElement="GW-QC">
+        <dc:Bounds x="1575" y="660" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EVT-WAIT_di" bpmnElement="EVT-WAIT">
+        <dc:Bounds x="1862" y="1007" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="FIN-INV-002_di" bpmnElement="FIN-INV-002">
+        <dc:Bounds x="1970" y="985" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="FIN-PAY-001_di" bpmnElement="FIN-PAY-001">
+        <dc:Bounds x="2110" y="815" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="END-OK_di" bpmnElement="END-OK">
+        <dc:Bounds x="2282" y="837" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BE-TIMEOUT_di" bpmnElement="BE-TIMEOUT">
+        <dc:Bounds x="342" y="167" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ESC-001_di" bpmnElement="ESC-001">
+        <dc:Bounds x="310" y="290" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="NTF-START_di" bpmnElement="NTF-START">
+        <dc:Bounds x="282" y="1217" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="NTF-001_di" bpmnElement="NTF-001">
+        <dc:Bounds x="400" y="1195" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="NTF-END_di" bpmnElement="NTF-END">
+        <dc:Bounds x="582" y="1217" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PUR-PO-003_di" bpmnElement="PUR-PO-003">
+        <dc:Bounds x="1270" y="475" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="INV-RET-001_di" bpmnElement="INV-RET-001">
+        <dc:Bounds x="1690" y="645" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="NTF2-START_di" bpmnElement="NTF2-START">
+        <dc:Bounds x="282" y="1417" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="NTF2-001_di" bpmnElement="NTF2-001">
+        <dc:Bounds x="400" y="1395" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="NTF2-END_di" bpmnElement="NTF2-END">
+        <dc:Bounds x="582" y="1417" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="F-001_di" bpmnElement="F-001">
+        <di:waypoint x="218" y="145" />
+        <di:waypoint x="280" y="145" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F-002_di" bpmnElement="F-002">
+        <di:waypoint x="380" y="145" />
+        <di:waypoint x="405" y="145" />
+        <di:waypoint x="405" y="330" />
+        <di:waypoint x="430" y="330" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F-003_di" bpmnElement="F-003">
+        <di:waypoint x="690" y="330" />
+        <di:waypoint x="755" y="330" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F-004_di" bpmnElement="F-004">
+        <di:waypoint x="805" y="330" />
+        <di:waypoint x="827" y="330" />
+        <di:waypoint x="827" y="145" />
+        <di:waypoint x="850" y="145" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F-005_di" bpmnElement="F-005">
+        <di:waypoint x="805" y="330" />
+        <di:waypoint x="882" y="330" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F-006_di" bpmnElement="F-006">
+        <di:waypoint x="950" y="145" />
+        <di:waypoint x="990" y="145" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F-007_di" bpmnElement="F-007">
+        <di:waypoint x="1090" y="145" />
+        <di:waypoint x="1110" y="145" />
+        <di:waypoint x="1110" y="515" />
+        <di:waypoint x="1130" y="515" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F-008_di" bpmnElement="F-008">
+        <di:waypoint x="1230" y="515" />
+        <di:waypoint x="1270" y="515" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F-011_di" bpmnElement="F-011">
+        <di:waypoint x="1625" y="685" />
+        <di:waypoint x="1743" y="685" />
+        <di:waypoint x="1743" y="1025" />
+        <di:waypoint x="1862" y="1025" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F-012_di" bpmnElement="F-012">
+        <di:waypoint x="1625" y="685" />
+        <di:waypoint x="1690" y="685" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F-013_di" bpmnElement="F-013">
+        <di:waypoint x="1898" y="1025" />
+        <di:waypoint x="1970" y="1025" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F-014_di" bpmnElement="F-014">
+        <di:waypoint x="2070" y="1025" />
+        <di:waypoint x="2090" y="1025" />
+        <di:waypoint x="2090" y="855" />
+        <di:waypoint x="2110" y="855" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F-015_di" bpmnElement="F-015">
+        <di:waypoint x="2210" y="855" />
+        <di:waypoint x="2282" y="855" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F-016_di" bpmnElement="F-016">
+        <di:waypoint x="360" y="203" />
+        <di:waypoint x="360" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F-017_di" bpmnElement="F-017">
+        <di:waypoint x="410" y="330" />
+        <di:waypoint x="755" y="330" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="NTF-F1_di" bpmnElement="NTF-F1">
+        <di:waypoint x="318" y="1235" />
+        <di:waypoint x="400" y="1235" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="NTF-F2_di" bpmnElement="NTF-F2">
+        <di:waypoint x="500" y="1235" />
+        <di:waypoint x="582" y="1235" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F-023_di" bpmnElement="F-023">
+        <di:waypoint x="530" y="330" />
+        <di:waypoint x="590" y="330" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F-020_di" bpmnElement="F-020">
+        <di:waypoint x="1370" y="515" />
+        <di:waypoint x="1390" y="515" />
+        <di:waypoint x="1390" y="685" />
+        <di:waypoint x="1410" y="685" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F-021_di" bpmnElement="F-021">
+        <di:waypoint x="1510" y="685" />
+        <di:waypoint x="1575" y="685" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F-022_di" bpmnElement="F-022">
+        <di:waypoint x="1740" y="725" />
+        <di:waypoint x="1740" y="765" />
+        <di:waypoint x="1460" y="765" />
+        <di:waypoint x="1460" y="725" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="NTF2-F1_di" bpmnElement="NTF2-F1">
+        <di:waypoint x="318" y="1435" />
+        <di:waypoint x="400" y="1435" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="NTF2-F2_di" bpmnElement="NTF2-F2">
+        <di:waypoint x="500" y="1435" />
+        <di:waypoint x="582" y="1435" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
