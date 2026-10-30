@@ -137,14 +137,15 @@ berisi hasil diff lengkap untuk file bernama sama yang tidak identik.
 ```bash
 python -m core.bpmn_diff OLD.bpmn NEW.bpmn
 python -m core.bpmn_diff OLD.bpmn NEW.bpmn --md
-python -m core.bpmn_diff OLD.bpmn NEW.bpmn --strict --out hasil.json
+python -m core.bpmn_diff OLD.bpmn NEW.bpmn --strict
 python -m core.bpmn_diff --dir OLD_DIR NEW_DIR --recursive
 python -m core.bpmn_parser FILE.bpmn [FILE2.bpmn ...] --types
 ```
 
+- Hasil diff selalu disimpan ke `output/<timestamp>.json` atau
+  `output/<timestamp>.md`; stdout hanya menampilkan path file.
 - Keluaran JSON memakai UTF-8 dan `ensure_ascii=False`.
-- `--md` menghasilkan ringkasan Markdown.
-- `--out` menulis hasil ke file, bukan stdout.
+- `--md` memilih format Markdown; `--json` memilih JSON (default).
 - `--debug` mencetak traceback penuh untuk error tak terduga.
 - `--version` mencetak versi skema.
 - `--types` menambahkan hitungan node per jenis pada ringkasan parser.

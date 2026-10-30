@@ -6,6 +6,7 @@ import sys
 import traceback
 from collections import Counter, defaultdict
 from collections.abc import Iterable
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -96,6 +97,8 @@ PARTICIPANT_KINDS = {"name": KIND_RENAMED, "process_ref": KIND_REPARENTED}
 PARTICIPANT_FIELDS = tuple(PARTICIPANT_KINDS)
 
 _SIDE_ORDER = {"old": 0, "new": 1, "diff": 2}
+_PROJECT_ROOT = Path(__file__).resolve().parents[1]
+OUTPUT_DIR = _PROJECT_ROOT / "output"
 FlowIndex = tuple[dict[str, list[str]], dict[str, list[str]]]
 
 
@@ -950,6 +953,14 @@ def _write_text(path: Path, text: str) -> None:
         handle.write(text + "\n")
 
 
+def _write_output(text: str, suffix: str) -> Path:
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+    path = OUTPUT_DIR / f"{timestamp}{suffix}"
+    _write_text(path, text)
+    return path
+
+
 def build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="python -m core.bpmn_diff",
@@ -971,16 +982,17 @@ def build_arg_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="search subdirectories together with --dir",
     )
-    parser.add_argument(
-        "--md", action="store_true", help="show a Markdown summary"
+    format_group = parser.add_mutually_exclusive_group()
+    format_group.add_argument(
+        "--md", action="store_true", help="write a Markdown result"
+    )
+    format_group.add_argument(
+        "--json", action="store_true", help="write a JSON result (default)"
     )
     parser.add_argument(
         "--strict",
         action="store_true",
         help="treat warning-level findings as errors",
-    )
-    parser.add_argument(
-        "--out", type=Path, default=None, help="write the result to a file"
     )
     parser.add_argument(
         "--debug",
@@ -1039,15 +1051,14 @@ def main(argv: list[str] | None = None) -> int:
     else:
         text = json.dumps(result, ensure_ascii=False, indent=2)
 
-    if args.out is not None:
-        try:
-            _write_text(args.out, text)
-        except OSError as exc:
-            print(f"Error: unable to write '{args.out}': {exc}", file=sys.stderr)
-            return 1
-    else:
-        print(text)
+    suffix = ".md" if args.md else ".json"
+    try:
+        output_path = _write_output(text, suffix)
+    except OSError as exc:
+        print(f"Error: unable to write output: {exc}", file=sys.stderr)
+        return 1
 
+    print(f"Output saved to {output_path.relative_to(_PROJECT_ROOT).as_posix()}")
     return 0
 
 

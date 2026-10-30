@@ -21,6 +21,7 @@ core/               # implementasi parser dan diff
   schema.py         # TypedDict untuk bentuk model dan hasil diff
   _cli.py           # helper bersama (UTF-8, path POSIX)
 bpmn/               # contoh file BPMN (old/new)
+output/             # hasil diff otomatis (kosong kecuali .gitkeep)
 ```
 
 ## Prasyarat
@@ -65,19 +66,24 @@ Opsi yang tersedia:
 
 | Opsi | Keterangan |
 |---|---|
-| `--md` | Menampilkan ringkasan Markdown, bukan JSON |
+| `--md` | Menyimpan hasil sebagai Markdown |
+| `--json` | Menyimpan hasil sebagai JSON (default) |
 | `--strict` | Menganggap warning berlevel `warning` sebagai error; `info` tidak memblokir |
-| `--out FILE` | Menulis hasil ke file, bukan stdout |
 | `--dir OLD_DIR NEW_DIR` | Membandingkan direktori, bukan dua file |
 | `--recursive` | Menelusuri subfolder bersama `--dir` |
 | `--debug` | Mencetak traceback untuk error tak terduga |
 | `--version` | Mencetak versi skema keluaran |
 
+Hasil selalu disimpan sebagai file di `output/` dengan nama timestamp, misalnya `output/20261030_165744_374649.json` atau `.md`. Stdout hanya menampilkan path file hasil.
+
 Contoh:
 
 ```bash
 python -m core.bpmn_diff bpmn/old/p2p_test_old.bpmn \
-  bpmn/new/p2p_test_new.bpmn --md --out p2p_diff.md
+  bpmn/new/p2p_test_new.bpmn
+
+python -m core.bpmn_diff bpmn/old/p2p_test_old.bpmn \
+  bpmn/new/p2p_test_new.bpmn --md
 
 python -m core.bpmn_diff --dir bpmn/old bpmn/new --recursive
 ```
