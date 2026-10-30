@@ -1,7 +1,11 @@
 # Core BPMN Parser dan Diff
 
-Implementasi `core/bpmn_parser.py` dan `core/bpmn_diff.py` sesuai PRD.
+Implementasi `core/bpmn_parser.py` dan `core/bpmn_diff.py`.
 Keduanya deterministik, tidak memakai LLM, dan tidak mengakses jaringan.
+
+Skema keluaran saat ini **1.1**. Perubahan dari 1.0 bersifat penambahan:
+`event_detail`, `loop_detail`, `triggered_by_event`, warning berlevel,
+kategori `participants`, dan ringkasan diff yang lebih kaya.
 
 ## Instalasi
 
@@ -25,7 +29,7 @@ from core.bpmn_diff import (
 ```
 
 - `parse_bpmn(path, strict=False)` membaca file `str`/`Path` dan mengembalikan
-  model PRD 7.1.
+  model pada bagian berikut.
 - `parse_bpmn_string(xml_text, strict=False)` membaca isi XML; `source_file`
   bernilai `""`.
 - `diff_models(old, new, strict=False)` membandingkan dua model.
@@ -33,17 +37,19 @@ from core.bpmn_diff import (
   membandingkannya.
 - `get_element(model, element_id)` mencari node, flow, lane, proses, atau
   participant berdasarkan ID. Mengembalikan `None` bila tidak ada.
-- `get_context(model, element_id)` mengembalikan flow masuk/keluar sebuah node
-  beserta node di seberang, diurutkan menurut ID flow.
-- `diff_dirs(old_dir, new_dir)` memasangkan `*.bpmn` berdasarkan nama file
-  (tidak rekursif). Perpindahan elemen antar-file tidak dilacak; elemen
-  tersebut muncul sebagai `removed`/`added` pada pasangan masing-masing.
+- `get_context(model, element_id, index=None)` mengembalikan flow masuk/keluar
+  sebuah node beserta node di seberang, diurutkan menurut ID flow. Parameter
+  `index` opsional dipakai `diff_models` agar pemindaian flow tidak kuadratik.
+- `diff_dirs(old_dir, new_dir, strict=False, recursive=False)` memasangkan
+  `*.bpmn` berdasarkan jalur relatif POSIX. Perpindahan elemen antar-file
+  tidak dilacak; elemen tersebut muncul sebagai `removed`/`added` pada
+  pasangan masing-masing.
 
 Semua fungsi tidak mengubah argumen dan tidak memakai state global. Mode
-`strict=True` mengubah setiap warning parser maupun diff menjadi
-`BpmnParseError`.
+`strict=True` hanya mengubah warning berlevel `warning` menjadi
+`BpmnParseError`; warning `info` tidak memblokir.
 
-## Model Parser (PRD 7.1)
+## Model Parser
 
 Kunci utama: `schema_version`, `source_file`, `processes`, `participants`,
 `lanes`, `nodes`, `flows`, `warnings`.
@@ -51,25 +57,38 @@ Kunci utama: `schema_version`, `source_file`, `processes`, `participants`,
 - `nodes` dan `flows` berupa objek ber-ID.
 - `lanes` berupa objek ber-ID; `parent_lane` menunjuk lane induk.
 - Node memiliki `lane` (nama lane terdalam), `lane_id`, dan `lane_path`
-  (terluar ke terdalam).
-- `parent` menunjuk proses atau subProcess pemilik. `process` menunjuk proses
-  teratas.
-- Field khusus: `default_flow`, `gateway_direction`, `event_definition`,
-  `loop`, `called_element`, `attached_to`, `cancel_activity`.
+  (terluar ke terdalam). Bila node terdaftar di lane luar dan lane turunannya,
+  lane terdalam dipakai tanpa warning. `MULTI_LANE` hanya muncul untuk lane
+  yang tidak berhubungan.
+- `parent` menunjuk proses atau container pemilik. Container yang dibaca:
+  `subProcess`, `adHocSubProcess`, dan `transaction`.
+- Field khusus: `default_flow`, `gateway_direction` (`Unspecified` dan atribut
+  kosong sama-sama menjadi `""`), `event_definition`, `event_detail`, `loop`,
+  `loop_detail`, `called_element`, `attached_to`, `cancel_activity`
+  (`boundaryEvent` tanpa atribut dianggap `"true"`), dan `triggered_by_event`.
+- `event_detail` berisi pasangan `kunci=nilai` terpisah `"; "` untuk detail
+  timer (`timeDate`, `timeDuration`, `timeCycle`), message/signal/error/
+  escalation (ID rujukan dan nama dari definisi), serta kondisi conditional.
+- `loop_detail` berisi `loopCardinality`, `completionCondition`,
+  `loopMaximum`, `loopCondition`, dan `testBefore` bila ada.
 - Semua teks dinormalisasi NFC dan spasinya dirapikan. ID tetap
   case-sensitive dan tidak dinormalisasi.
-- Bagian DI, `incoming`/`outgoing`, dan ekstensi vendor diabaikan.
+- Bagian DI, `incoming`/`outgoing`, elemen visual (`textAnnotation`,
+  `association`, `group`, `category*`), dan ekstensi vendor diabaikan.
+- `source_file` diserialisasi dengan pemisah `/` agar keluaran lintas-platform.
 
 Kode warning: `MISSING_ID`, `MISSING_ENDPOINT`, `DANGLING_REF`,
-`MULTI_LANE`, `UNKNOWN_ELEMENT`.
+`MULTI_LANE`, `UNKNOWN_ELEMENT`, `UNPARSED_CHILDREN`.
+Setiap warning berbentuk `{code, message, element_id, level}` dengan `level`
+`info` atau `warning`.
 
 Parser memakai `defusedxml`, menolak DTD/entitas, dan menolak file di atas
 20 MB.
 
-## Hasil Diff (PRD 7.2)
+## Hasil Diff
 
 Kunci utama: `schema_version`, `old_file`, `new_file`, `summary`, `nodes`,
-`flows`, `lanes`, `processes`, `warnings`.
+`flows`, `lanes`, `processes`, `participants`, `warnings`.
 
 - Pencocokan elemen hanya berdasarkan ID persis.
 - `changed` node memuat `id`, `kinds`, `fields`, dan `context`.
@@ -77,13 +96,18 @@ Kunci utama: `schema_version`, `old_file`, `new_file`, `summary`, `nodes`,
   `endpoints_old`.
 - `context` berisi `incoming`/`outgoing`; `endpoints` berisi ringkasan node
   sumber dan tujuan (`id`, `type`, `name`).
-- Lane dan proses yang berubah memuat `id`, `kinds`, dan `fields`.
-- Participant dibandingkan pada kategori `processes` (field `name`), karena
-  skema 7.2 tidak memiliki kategori participant terpisah.
+- Lane, proses, dan participant yang berubah memuat `id`, `kinds`, dan
+  `fields`. Participant dibandingkan pada kategori `participants` dengan field
+  `name` (label `renamed`) dan `process_ref` (label `reparented`).
 - `summary.identical` bernilai `true` hanya bila seluruh kategori kosong.
-- `summary.possible_renames` hanya petunjuk; daftar utama tidak berubah.
+- `summary.possible_renames` hanya petunjuk: nama harus tidak kosong, kunci
+  `(type, name, lane_id)` harus cocok, dan pasangan harus unik di kedua sisi.
+- `summary.kinds` adalah histogram label perubahan; `summary.touched_node_ids`
+  memuat node yang berubah atau menjadi ujung flow yang berubah;
+  `summary.warnings` adalah jumlah warning.
 - `warnings` memuat warning kedua model dengan `side` `old`/`new`. Warning
-  diff memakai `side` `diff`, termasuk `NO_OVERLAPPING_IDS`.
+  diff memakai `side` `diff`, termasuk `NO_OVERLAPPING_IDS` dan
+  `SCHEMA_MISMATCH`.
 - Semua daftar diurutkan berdasarkan ID, sehingga urutan XML dan hash seed
   Python tidak memengaruhi hasil.
 
@@ -91,15 +115,22 @@ Kunci utama: `schema_version`, `old_file`, `new_file`, `summary`, `nodes`,
 
 ```json
 {
-  "schema_version": "1.0",
+  "schema_version": "1.1",
   "old_dir": "...",
   "new_dir": "...",
-  "files": {"added": [], "removed": [], "changed": []}
+  "files": {
+    "added": [],
+    "removed": [],
+    "changed": [],
+    "unchanged": 0,
+    "identical_names": []
+  }
 }
 ```
 
-`files.added`/`files.removed` berisi nama file. `files.changed` berisi hasil
-diff lengkap untuk file bernama sama yang tidak identik.
+`files.added`/`files.removed` berisi jalur relatif POSIX. `files.changed`
+berisi hasil diff lengkap untuk file bernama sama yang tidak identik.
+`files.unchanged` dan `files.identical_names` mencatat file yang sama.
 
 ## CLI
 
@@ -107,38 +138,25 @@ diff lengkap untuk file bernama sama yang tidak identik.
 python -m core.bpmn_diff OLD.bpmn NEW.bpmn
 python -m core.bpmn_diff OLD.bpmn NEW.bpmn --md
 python -m core.bpmn_diff OLD.bpmn NEW.bpmn --strict --out hasil.json
-python -m core.bpmn_parser FILE.bpmn [FILE2.bpmn ...]
+python -m core.bpmn_diff --dir OLD_DIR NEW_DIR --recursive
+python -m core.bpmn_parser FILE.bpmn [FILE2.bpmn ...] --types
 ```
 
 - Keluaran JSON memakai UTF-8 dan `ensure_ascii=False`.
 - `--md` menghasilkan ringkasan Markdown.
 - `--out` menulis hasil ke file, bukan stdout.
+- `--debug` mencetak traceback penuh untuk error tak terduga.
+- `--version` mencetak versi skema.
+- `--types` menambahkan hitungan node per jenis pada ringkasan parser.
 - Kode keluar: `0` sukses, `2` file gagal dibaca/di-parse atau pelanggaran
   `strict`, `1` error lain.
 
-## Uji Asap Simple-ERP
+## Konvensi Kode
 
-Salinan 6 file asli berada di `tests/fixtures/simple_erp/`. Semua ter-parse
-tanpa warning: 9 proses, 9 participant, 12 lane, 104 node, dan 120 flow.
-Elemen yang muncul: `task`, `userTask`, `serviceTask`, `callActivity`,
-`startEvent`, `endEvent`, `exclusiveGateway`, `sequenceFlow`, `messageFlow`,
-`participant`, `lane`, `laneSet`, `conditionExpression`, serta
-`incoming`/`outgoing` yang diabaikan. Tidak ditemukan `boundaryEvent`,
-`dataObject`, `textAnnotation`, lane bersarang, atau ekstensi vendor.
-`callActivity` di l0 merujuk proses di file lain melalui `calledElement`;
-referensi lintas-file disimpan apa adanya dan tidak di-resolve.
-
-## Pengujian
-
-```bash
-python -m pytest
-```
-
-Fixture pasangan `*_old.bpmn` dan `*_new.bpmn` berada di `tests/fixtures/`.
-Contoh keluaran S00 ada di `examples/s00_diff.json`. Fixture S00 diambil dari
-`docs/bpmn/l1-core-processes.bpmn` pada commit `f5a556b` dan induknya.
-
-```bash
-python -m core.bpmn_diff tests/fixtures/s00_old.bpmn \
-  tests/fixtures/s00_new.bpmn --out examples/s00_diff.json
-```
+- Identifier, kode warning, nama label `kinds`, dan pesan error berbahasa
+  Inggris; dokumentasi berbahasa Indonesia.
+- Fungsi publik murni. I/O hanya di `parse_bpmn`, `diff_files`, `diff_dirs`,
+  dan `main`.
+- Semua keluaran berurutan tetap: daftar terurut menurut ID, `kinds` terurut.
+- Kode warning, level, label, dan versi skema berada di `core/constants.py`.
+  Bentuk data didokumentasikan sebagai `TypedDict` di `core/schema.py`.
