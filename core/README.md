@@ -20,7 +20,6 @@ pip install -r requirements.txt
 ```python
 from core.bpmn_parser import BpmnParseError, parse_bpmn, parse_bpmn_string
 from core.bpmn_diff import (
-    diff_dirs,
     diff_files,
     diff_models,
     get_context,
@@ -40,10 +39,6 @@ from core.bpmn_diff import (
 - `get_context(model, element_id, index=None)` mengembalikan flow masuk/keluar
   sebuah node beserta node di seberang, diurutkan menurut ID flow. Parameter
   `index` opsional dipakai `diff_models` agar pemindaian flow tidak kuadratik.
-- `diff_dirs(old_dir, new_dir, strict=False, recursive=False)` memasangkan
-  `*.bpmn` berdasarkan jalur relatif POSIX. Perpindahan elemen antar-file
-  tidak dilacak; elemen tersebut muncul sebagai `removed`/`added` pada
-  pasangan masing-masing.
 
 Semua fungsi tidak mengubah argumen dan tidak memakai state global. Mode
 `strict=True` hanya mengubah warning berlevel `warning` menjadi
@@ -111,34 +106,12 @@ Kunci utama: `schema_version`, `old_file`, `new_file`, `summary`, `nodes`,
 - Semua daftar diurutkan berdasarkan ID, sehingga urutan XML dan hash seed
   Python tidak memengaruhi hasil.
 
-`diff_dirs` mengembalikan:
-
-```json
-{
-  "schema_version": "1.1",
-  "old_dir": "...",
-  "new_dir": "...",
-  "files": {
-    "added": [],
-    "removed": [],
-    "changed": [],
-    "unchanged": 0,
-    "identical_names": []
-  }
-}
-```
-
-`files.added`/`files.removed` berisi jalur relatif POSIX. `files.changed`
-berisi hasil diff lengkap untuk file bernama sama yang tidak identik.
-`files.unchanged` dan `files.identical_names` mencatat file yang sama.
-
 ## CLI
 
 ```bash
 python -m core.bpmn_diff OLD.bpmn NEW.bpmn
 python -m core.bpmn_diff OLD.bpmn NEW.bpmn --md
 python -m core.bpmn_diff OLD.bpmn NEW.bpmn --strict
-python -m core.bpmn_diff --dir OLD_DIR NEW_DIR --recursive
 python -m core.bpmn_parser FILE.bpmn [FILE2.bpmn ...] --types
 ```
 
@@ -156,8 +129,7 @@ python -m core.bpmn_parser FILE.bpmn [FILE2.bpmn ...] --types
 
 - Identifier, kode warning, nama label `kinds`, dan pesan error berbahasa
   Inggris; dokumentasi berbahasa Indonesia.
-- Fungsi publik murni. I/O hanya di `parse_bpmn`, `diff_files`, `diff_dirs`,
-  dan `main`.
+- Fungsi publik murni. I/O hanya di `parse_bpmn`, `diff_files`, dan `main`.
 - Semua keluaran berurutan tetap: daftar terurut menurut ID, `kinds` terurut.
 - Kode warning, level, label, dan versi skema berada di `core/constants.py`.
   Bentuk data didokumentasikan sebagai `TypedDict` di `core/schema.py`.

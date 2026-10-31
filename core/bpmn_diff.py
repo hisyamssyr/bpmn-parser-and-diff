@@ -50,7 +50,6 @@ __all__ = [
     "PROCESS_FIELDS",
     "PROCESS_KINDS",
     "build_arg_parser",
-    "diff_dirs",
     "diff_files",
     "diff_models",
     "get_context",
@@ -292,56 +291,6 @@ def get_context(
             )
         )
     return {"incoming": incoming, "outgoing": outgoing}
-
-
-def diff_dirs(
-    old_dir: str | Path,
-    new_dir: str | Path,
-    strict: bool = False,
-    recursive: bool = False,
-) -> dict[str, Any]:
-    old_path = Path(old_dir)
-    new_path = Path(new_dir)
-    if not old_path.is_dir():
-        raise BpmnParseError(f"Directory not found: '{old_path}'")
-    if not new_path.is_dir():
-        raise BpmnParseError(f"Directory not found: '{new_path}'")
-
-    old_files = _bpmn_files(old_path, recursive)
-    new_files = _bpmn_files(new_path, recursive)
-
-    added = sorted(set(new_files) - set(old_files))
-    removed = sorted(set(old_files) - set(new_files))
-    changed: list[dict[str, Any]] = []
-    identical_names: list[str] = []
-    for name in sorted(set(old_files) & set(new_files)):
-        result = diff_files(old_files[name], new_files[name], strict=strict)
-        if result["summary"]["identical"]:
-            identical_names.append(name)
-        else:
-            changed.append(result)
-
-    return {
-        "schema_version": SCHEMA_VERSION,
-        "old_dir": display_path(old_path),
-        "new_dir": display_path(new_path),
-        "files": {
-            "added": added,
-            "removed": removed,
-            "changed": changed,
-            "unchanged": len(identical_names),
-            "identical_names": identical_names,
-        },
-    }
-
-
-def _bpmn_files(root: Path, recursive: bool) -> dict[str, Path]:
-    pattern = root.rglob("*.bpmn") if recursive else root.glob("*.bpmn")
-    files: dict[str, Path] = {}
-    for path in sorted(pattern):
-        if path.is_file():
-            files[path.relative_to(root).as_posix()] = path
-    return files
 
 
 def _diff_nodes(
@@ -921,33 +870,6 @@ def _format_markdown(result: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def _format_dirs_markdown(result: dict[str, Any]) -> str:
-    files = result["files"]
-    lines = [
-        "# BPMN Directory Diff",
-        "",
-        f"- Old directory: `{result['old_dir']}`",
-        f"- New directory: `{result['new_dir']}`",
-        f"- Added files: {len(files['added'])}",
-        f"- Removed files: {len(files['removed'])}",
-        f"- Changed files: {len(files['changed'])}",
-        f"- Unchanged files: {files['unchanged']}",
-    ]
-    if files["added"]:
-        lines.extend(["", "## Added"])
-        lines.extend(f"- `{name}`" for name in files["added"])
-    if files["removed"]:
-        lines.extend(["", "## Removed"])
-        lines.extend(f"- `{name}`" for name in files["removed"])
-    if files["changed"]:
-        lines.extend(["", "## Changed"])
-        lines.extend(
-            f"- `{item['old_file']}` -> `{item['new_file']}`"
-            for item in files["changed"]
-        )
-    return "\n".join(lines)
-
-
 def _write_text(path: Path, text: str) -> None:
     with path.open("w", encoding="utf-8", newline="\n") as handle:
         handle.write(text + "\n")
@@ -964,24 +886,11 @@ def _write_output(text: str, suffix: str) -> Path:
 def build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="python -m core.bpmn_diff",
-        description="Compare two BPMN 2.0 files or directories.",
+        description="Compare two BPMN 2.0 files.",
         epilog="Exit codes: 0 success, 1 unexpected error, 2 parse/strict failure.",
     )
-    parser.add_argument("old", nargs="?", type=Path, help="old BPMN file")
-    parser.add_argument("new", nargs="?", type=Path, help="new BPMN file")
-    parser.add_argument(
-        "--dir",
-        nargs=2,
-        metavar=("OLD_DIR", "NEW_DIR"),
-        type=Path,
-        default=None,
-        help="compare directories instead of two files",
-    )
-    parser.add_argument(
-        "--recursive",
-        action="store_true",
-        help="search subdirectories together with --dir",
-    )
+    parser.add_argument("old", type=Path, help="old BPMN file")
+    parser.add_argument("new", type=Path, help="new BPMN file")
     format_group = parser.add_mutually_exclusive_group()
     format_group.add_argument(
         "--md", action="store_true", help="write a Markdown result"
@@ -1012,29 +921,11 @@ def main(argv: list[str] | None = None) -> int:
     parser = build_arg_parser()
     args = parser.parse_args(argv)
 
-    if args.dir is not None:
-        if args.old is not None or args.new is not None:
-            parser.error("OLD and NEW must be omitted when --dir is used")
-        old_dir, new_dir = args.dir
-    else:
-        if args.old is None or args.new is None:
-            parser.error("OLD and NEW are required unless --dir is used")
-        if args.recursive:
-            parser.error("--recursive requires --dir")
-
     force_utf8(sys.stdout)
     force_utf8(sys.stderr)
 
     try:
-        if args.dir is not None:
-            result = diff_dirs(
-                old_dir,
-                new_dir,
-                strict=args.strict,
-                recursive=args.recursive,
-            )
-        else:
-            result = diff_files(args.old, args.new, strict=args.strict)
+        result = diff_files(args.old, args.new, strict=args.strict)
     except BpmnParseError as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 2
@@ -1044,9 +935,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Error: {exc}", file=sys.stderr)
         return 1
 
-    if args.dir is not None and args.md:
-        text = _format_dirs_markdown(result)
-    elif args.md:
+    if args.md:
         text = _format_markdown(result)
     else:
         text = json.dumps(result, ensure_ascii=False, indent=2)

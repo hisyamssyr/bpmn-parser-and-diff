@@ -69,8 +69,6 @@ Available options:
 | `--md` | Saves the result as Markdown |
 | `--json` | Saves the result as JSON (default) |
 | `--strict` | Treats `warning`-level warnings as errors; `info` does not block |
-| `--dir OLD_DIR NEW_DIR` | Compares directories instead of two files |
-| `--recursive` | Traverses subfolders together with `--dir` |
 | `--debug` | Prints a traceback for unexpected errors |
 | `--version` | Prints the output schema version |
 
@@ -84,8 +82,6 @@ python -m core.bpmn_diff bpmn/old/p2p_test_old.bpmn \
 
 python -m core.bpmn_diff bpmn/old/p2p_test_old.bpmn \
   bpmn/new/p2p_test_new.bpmn --md
-
-python -m core.bpmn_diff --dir bpmn/old bpmn/new --recursive
 ```
 
 Exit codes: `0` success, `2` a file failed to be read/parsed or a `--strict` violation, `1` another error.
