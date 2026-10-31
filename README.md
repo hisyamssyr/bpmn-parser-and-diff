@@ -59,7 +59,7 @@ The output is a JSON summary (the number of processes, participants, lanes, node
 ### 3. Compare two BPMN versions
 
 ```bash
-python -m core.bpmn_diff bpmn/old/p2p_test_old.bpmn bpmn/new/p2p_test_new.bpmn
+python -m core.bpmn_diff bpmn/old/p2p_test_old.bpmn bpmn/new/p2p_test_new.bpmn --json
 ```
 
 Available options:
@@ -67,7 +67,7 @@ Available options:
 | Option | Description |
 |---|---|
 | `--md` | Saves the result as Markdown |
-| `--json` | Saves the result as JSON (default) |
+| `--json` | Saves the result as JSON |
 | `--strict` | Treats `warning`-level warnings as errors; `info` does not block |
 | `--debug` | Prints a traceback for unexpected errors |
 | `--version` | Prints the output schema version |
@@ -78,7 +78,7 @@ Examples:
 
 ```bash
 python -m core.bpmn_diff bpmn/old/p2p_test_old.bpmn \
-  bpmn/new/p2p_test_new.bpmn
+  bpmn/new/p2p_test_new.bpmn --json
 
 python -m core.bpmn_diff bpmn/old/p2p_test_old.bpmn \
   bpmn/new/p2p_test_new.bpmn --md

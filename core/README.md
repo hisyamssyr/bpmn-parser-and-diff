@@ -109,16 +109,17 @@ Kunci utama: `schema_version`, `old_file`, `new_file`, `summary`, `nodes`,
 ## CLI
 
 ```bash
-python -m core.bpmn_diff OLD.bpmn NEW.bpmn
+python -m core.bpmn_diff OLD.bpmn NEW.bpmn --json
 python -m core.bpmn_diff OLD.bpmn NEW.bpmn --md
-python -m core.bpmn_diff OLD.bpmn NEW.bpmn --strict
+python -m core.bpmn_diff OLD.bpmn NEW.bpmn --json --strict
 python -m core.bpmn_parser FILE.bpmn [FILE2.bpmn ...] --types
 ```
 
 - Hasil diff selalu disimpan ke `output/<timestamp>.json` atau
   `output/<timestamp>.md`; stdout hanya menampilkan path file.
 - Keluaran JSON memakai UTF-8 dan `ensure_ascii=False`.
-- `--md` memilih format Markdown; `--json` memilih JSON (default).
+- `--md` memilih format Markdown; `--json` memilih JSON. Salah satunya wajib
+  diberikan.
 - `--debug` mencetak traceback penuh untuk error tak terduga.
 - `--version` mencetak versi skema.
 - `--types` menambahkan hitungan node per jenis pada ringkasan parser.

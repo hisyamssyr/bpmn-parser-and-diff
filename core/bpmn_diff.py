@@ -891,12 +891,12 @@ def build_arg_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("old", type=Path, help="old BPMN file")
     parser.add_argument("new", type=Path, help="new BPMN file")
-    format_group = parser.add_mutually_exclusive_group()
+    format_group = parser.add_mutually_exclusive_group(required=True)
     format_group.add_argument(
         "--md", action="store_true", help="write a Markdown result"
     )
     format_group.add_argument(
-        "--json", action="store_true", help="write a JSON result (default)"
+        "--json", action="store_true", help="write a JSON result"
     )
     parser.add_argument(
         "--strict",
