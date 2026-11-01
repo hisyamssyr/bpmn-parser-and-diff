@@ -10,7 +10,12 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from ._cli import display_path, force_utf8
+from ._cli import (
+    BpmnPathError,
+    display_path,
+    force_utf8,
+    resolve_bpmn_file,
+)
 from .bpmn_parser import BpmnParseError, parse_bpmn
 from .constants import (
     KIND_ATTACHED_TO_CHANGED,
@@ -889,8 +894,18 @@ def build_arg_parser() -> argparse.ArgumentParser:
         description="Compare two BPMN 2.0 files.",
         epilog="Exit codes: 0 success, 1 unexpected error, 2 parse/strict failure.",
     )
-    parser.add_argument("old", type=Path, help="old BPMN file")
-    parser.add_argument("new", type=Path, help="new BPMN file")
+    parser.add_argument(
+        "old",
+        type=str,
+        metavar="OLD",
+        help="old BPMN file name, looked up in bpmn/old",
+    )
+    parser.add_argument(
+        "new",
+        type=str,
+        metavar="NEW",
+        help="new BPMN file name, looked up in bpmn/new",
+    )
     format_group = parser.add_mutually_exclusive_group(required=True)
     format_group.add_argument(
         "--md", action="store_true", help="write a Markdown result"
@@ -925,7 +940,12 @@ def main(argv: list[str] | None = None) -> int:
     force_utf8(sys.stderr)
 
     try:
-        result = diff_files(args.old, args.new, strict=args.strict)
+        old_path = resolve_bpmn_file(args.old, side="old")
+        new_path = resolve_bpmn_file(args.new, side="new")
+        result = diff_files(old_path, new_path, strict=args.strict)
+    except BpmnPathError as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 2
     except BpmnParseError as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 2

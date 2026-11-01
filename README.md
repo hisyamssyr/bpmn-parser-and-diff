@@ -19,8 +19,9 @@ core/               # parser and diff implementation
   bpmn_diff.py      # diff of two models + CLI
   constants.py      # warning codes, levels, label kinds, schema version
   schema.py         # TypedDict for the model and diff result shapes
-  _cli.py           # shared helpers (UTF-8, POSIX paths)
-bpmn/               # sample BPMN files (old/new)
+  _cli.py           # shared helpers (BPMN path resolution, UTF-8, POSIX paths)
+bpmn/old/           # old BPMN files
+bpmn/new/           # new BPMN files
 output/             # automatic diff results (empty except for .gitkeep)
 ```
 
@@ -43,9 +44,13 @@ pip install -r requirements.txt
 
 ### 2. Parse one or more BPMN files
 
+Place the file in `bpmn/old/` or `bpmn/new/` first, then pass only its name:
+
 ```bash
-python -m core.bpmn_parser bpmn/new/p2p_test_new.bpmn
+python -m core.bpmn_parser p2p_test_new.bpmn
 ```
+
+If the same name exists in both folders, use `old/<name>` or `new/<name>`.
 
 The output is a JSON summary (the number of processes, participants, lanes, nodes, flows, and warnings). Parser options:
 
@@ -58,9 +63,13 @@ The output is a JSON summary (the number of processes, participants, lanes, node
 
 ### 3. Compare two BPMN versions
 
+Place the old file in `bpmn/old/` and the new file in `bpmn/new/`, then pass only their names:
+
 ```bash
-python -m core.bpmn_diff bpmn/old/p2p_test_old.bpmn bpmn/new/p2p_test_new.bpmn --json
+python -m core.bpmn_diff p2p_test_old.bpmn p2p_test_new.bpmn --json
 ```
+
+Both file names must be given in full.
 
 Available options:
 
@@ -77,11 +86,8 @@ The result is always saved as a file in `output/` with a timestamped name, for e
 Examples:
 
 ```bash
-python -m core.bpmn_diff bpmn/old/p2p_test_old.bpmn \
-  bpmn/new/p2p_test_new.bpmn --json
-
-python -m core.bpmn_diff bpmn/old/p2p_test_old.bpmn \
-  bpmn/new/p2p_test_new.bpmn --md
+python -m core.bpmn_diff p2p_test_old.bpmn p2p_test_new.bpmn --json
+python -m core.bpmn_diff p2p_test_old.bpmn p2p_test_new.bpmn --md
 ```
 
 Exit codes: `0` success, `2` a file failed to be read/parsed or a `--strict` violation, `1` another error.

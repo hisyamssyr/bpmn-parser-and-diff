@@ -109,12 +109,17 @@ Kunci utama: `schema_version`, `old_file`, `new_file`, `summary`, `nodes`,
 ## CLI
 
 ```bash
-python -m core.bpmn_diff OLD.bpmn NEW.bpmn --json
-python -m core.bpmn_diff OLD.bpmn NEW.bpmn --md
-python -m core.bpmn_diff OLD.bpmn NEW.bpmn --json --strict
-python -m core.bpmn_parser FILE.bpmn [FILE2.bpmn ...] --types
+python -m core.bpmn_diff p2p_test_old.bpmn p2p_test_new.bpmn --json
+python -m core.bpmn_diff p2p_test_old.bpmn p2p_test_new.bpmn --md
+python -m core.bpmn_diff p2p_test_old.bpmn p2p_test_new.bpmn --json --strict
+python -m core.bpmn_parser p2p_test_new.bpmn [FILE2.bpmn ...] --types
 ```
 
+- File lama diletakkan di `bpmn/old/` dan file baru di `bpmn/new/`. CLI hanya
+  menerima nama file lengkap; path folder sudah di-hardcode. Kedua nama file
+  pada diff wajib diberikan.
+- Untuk parser, jika nama yang sama ada di kedua folder, gunakan
+  `old/<nama>` atau `new/<nama>`.
 - Hasil diff selalu disimpan ke `output/<timestamp>.json` atau
   `output/<timestamp>.md`; stdout hanya menampilkan path file.
 - Keluaran JSON memakai UTF-8 dan `ensure_ascii=False`.

@@ -10,7 +10,7 @@ import xml.etree.ElementTree as StandardET
 from pathlib import Path
 from typing import Any
 
-from ._cli import display_path, force_utf8
+from ._cli import BpmnPathError, display_path, force_utf8, resolve_bpmn_file
 from .constants import (
     SCHEMA_VERSION,
     WARNING_DANGLING_REF,
@@ -901,7 +901,13 @@ def build_arg_parser() -> argparse.ArgumentParser:
         description="Show a summary of one or more BPMN 2.0 files.",
         epilog="Exit codes: 0 success, 1 unexpected error, 2 parse/strict failure.",
     )
-    parser.add_argument("files", nargs="+", type=Path, help="BPMN file")
+    parser.add_argument(
+        "files",
+        nargs="+",
+        type=str,
+        metavar="FILE",
+        help="BPMN file name, looked up in bpmn/old and bpmn/new",
+    )
     parser.add_argument(
         "--strict",
         action="store_true",
@@ -935,9 +941,13 @@ def main(argv: list[str] | None = None) -> int:
 
     summaries: list[dict[str, Any]] = []
     try:
-        for file_path in args.files:
+        file_paths = [resolve_bpmn_file(name) for name in args.files]
+        for file_path in file_paths:
             model = parse_bpmn(file_path, strict=args.strict)
             summaries.append(_file_summary(model, include_types=args.types))
+    except BpmnPathError as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 2
     except BpmnParseError as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 2
