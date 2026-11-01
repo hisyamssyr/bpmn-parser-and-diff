@@ -102,7 +102,7 @@ PARTICIPANT_FIELDS = tuple(PARTICIPANT_KINDS)
 
 _SIDE_ORDER = {"old": 0, "new": 1, "diff": 2}
 _PROJECT_ROOT = Path(__file__).resolve().parents[1]
-OUTPUT_DIR = _PROJECT_ROOT / "output"
+OUTPUT_DIR = _PROJECT_ROOT / "output" / "diff"
 FlowIndex = tuple[dict[str, list[str]], dict[str, list[str]]]
 
 

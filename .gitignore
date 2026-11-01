@@ -4,5 +4,12 @@ __pycache__/
 *.pyc
 output/*
 !output/.gitkeep
+!output/diff/
+!output/view/
+output/diff/*
+!output/diff/.gitkeep
+output/view/*
+!output/view/.gitkeep
 docs/
 tests/
+requirements-dev.txt
