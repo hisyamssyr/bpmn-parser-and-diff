@@ -1,16 +1,12 @@
 from __future__ import annotations
 
-import argparse
-import json
 import re
-import sys
-import traceback
 import unicodedata
 import xml.etree.ElementTree as StandardET
 from pathlib import Path
 from typing import Any
 
-from ._cli import BpmnPathError, display_path, force_utf8, resolve_bpmn_file
+from ._cli import display_path
 from .constants import (
     SCHEMA_VERSION,
     WARNING_DANGLING_REF,
@@ -30,8 +26,6 @@ __all__ = [
     "NODE_TYPES",
     "SCHEMA_VERSION",
     "BpmnParseError",
-    "build_arg_parser",
-    "main",
     "parse_bpmn",
     "parse_bpmn_string",
 ]
@@ -875,92 +869,3 @@ class _Parser:
                     f"'{attached_to}'",
                     node_id,
                 )
-
-
-def _file_summary(model: ParsedModel, include_types: bool = False) -> dict[str, Any]:
-    summary: dict[str, Any] = {
-        "source_file": model["source_file"],
-        "processes": len(model["processes"]),
-        "participants": len(model["participants"]),
-        "lanes": len(model["lanes"]),
-        "nodes": len(model["nodes"]),
-        "flows": len(model["flows"]),
-        "warnings": model["warnings"],
-    }
-    if include_types:
-        counts: dict[str, int] = {}
-        for node in model["nodes"].values():
-            counts[node["type"]] = counts.get(node["type"], 0) + 1
-        summary["node_types"] = dict(sorted(counts.items()))
-    return summary
-
-
-def build_arg_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(
-        prog="python -m core.bpmn_parser",
-        description="Show a summary of one or more BPMN 2.0 files.",
-        epilog="Exit codes: 0 success, 1 unexpected error, 2 parse/strict failure.",
-    )
-    parser.add_argument(
-        "files",
-        nargs="+",
-        type=str,
-        metavar="FILE",
-        help="BPMN file name, looked up in bpmn/old and bpmn/new",
-    )
-    parser.add_argument(
-        "--strict",
-        action="store_true",
-        help="treat warning-level findings as errors",
-    )
-    parser.add_argument(
-        "--types",
-        action="store_true",
-        help="include node counts per BPMN type",
-    )
-    parser.add_argument(
-        "--debug",
-        action="store_true",
-        help="print a full traceback on unexpected errors",
-    )
-    parser.add_argument(
-        "--version",
-        action="version",
-        version=SCHEMA_VERSION,
-        help="print the output schema version",
-    )
-    return parser
-
-
-def main(argv: list[str] | None = None) -> int:
-    parser = build_arg_parser()
-    args = parser.parse_args(argv)
-
-    force_utf8(sys.stdout)
-    force_utf8(sys.stderr)
-
-    summaries: list[dict[str, Any]] = []
-    try:
-        file_paths = [resolve_bpmn_file(name) for name in args.files]
-        for file_path in file_paths:
-            model = parse_bpmn(file_path, strict=args.strict)
-            summaries.append(_file_summary(model, include_types=args.types))
-    except BpmnPathError as exc:
-        print(f"Error: {exc}", file=sys.stderr)
-        return 2
-    except BpmnParseError as exc:
-        print(f"Error: {exc}", file=sys.stderr)
-        return 2
-    except Exception as exc:
-        if args.debug:
-            traceback.print_exc()
-        print(f"Error: {exc}", file=sys.stderr)
-        return 1
-
-    payload = {"schema_version": SCHEMA_VERSION, "files": summaries}
-    print(json.dumps(payload, ensure_ascii=False, indent=2))
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())
